@@ -139,33 +139,123 @@ Seja sempre natural, consultiva e focada em qualificar adequadamente cada intere
       throw new Error('API Key do OpenAI não configurada');
     }
 
-    console.log('🧠 Enviando para OpenAI GPT-4...');
+    console.log('🧠 Enviando para Maria (Assistant API)...');
 
-    // Chamar API do OpenAI
-    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    // ID do Assistant da Maria
+    const assistantId = 'asst_wY5SlEkxyfjXAur6qFUYm2cN';
+
+    // Criar uma nova thread para a conversa
+    const threadResponse = await fetch('https://api.openai.com/v1/threads', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAIKey}`,
         'Content-Type': 'application/json',
+        'OpenAI-Beta': 'assistants=v2',
+      },
+      body: JSON.stringify({}),
+    });
+
+    if (!threadResponse.ok) {
+      const errorData = await threadResponse.text();
+      console.error('❌ Erro criando thread:', errorData);
+      throw new Error(`Erro criando thread: ${threadResponse.status}`);
+    }
+
+    const threadData = await threadResponse.json();
+    const threadId = threadData.id;
+
+    // Adicionar a mensagem do usuário à thread
+    const messageResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIKey}`,
+        'Content-Type': 'application/json',
+        'OpenAI-Beta': 'assistants=v2',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: messages,
-        max_tokens: 600,
-        temperature: 0.8, // Mais criativa para conversação natural
-        presence_penalty: 0.1,
-        frequency_penalty: 0.1,
+        role: 'user',
+        content: message,
       }),
     });
 
-    if (!openAIResponse.ok) {
-      const errorData = await openAIResponse.text();
-      console.error('❌ Erro OpenAI:', errorData);
-      throw new Error(`Erro na API do OpenAI: ${openAIResponse.status}`);
+    if (!messageResponse.ok) {
+      const errorData = await messageResponse.text();
+      console.error('❌ Erro adicionando mensagem:', errorData);
+      throw new Error(`Erro adicionando mensagem: ${messageResponse.status}`);
     }
 
-    const openAIData = await openAIResponse.json();
-    const aiResponse = openAIData.choices[0].message.content;
+    // Executar o assistant
+    const runResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIKey}`,
+        'Content-Type': 'application/json',
+        'OpenAI-Beta': 'assistants=v2',
+      },
+      body: JSON.stringify({
+        assistant_id: assistantId,
+      }),
+    });
+
+    if (!runResponse.ok) {
+      const errorData = await runResponse.text();
+      console.error('❌ Erro executando assistant:', errorData);
+      throw new Error(`Erro executando assistant: ${runResponse.status}`);
+    }
+
+    const runData = await runResponse.json();
+    const runId = runData.id;
+
+    // Aguardar a conclusão do run
+    let runStatus = 'in_progress';
+    let attempts = 0;
+    const maxAttempts = 30; // 30 segundos timeout
+
+    while (runStatus === 'in_progress' || runStatus === 'queued') {
+      if (attempts >= maxAttempts) {
+        throw new Error('Timeout aguardando resposta do assistant');
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Aguardar 1 segundo
+      attempts++;
+
+      const statusResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs/${runId}`, {
+        headers: {
+          'Authorization': `Bearer ${openAIKey}`,
+          'OpenAI-Beta': 'assistants=v2',
+        },
+      });
+
+      if (!statusResponse.ok) {
+        throw new Error(`Erro verificando status: ${statusResponse.status}`);
+      }
+
+      const statusData = await statusResponse.json();
+      runStatus = statusData.status;
+
+      console.log(`📊 Status do run: ${runStatus} (tentativa ${attempts})`);
+    }
+
+    if (runStatus !== 'completed') {
+      throw new Error(`Run falhou com status: ${runStatus}`);
+    }
+
+    // Buscar as mensagens da thread
+    const messagesResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
+      headers: {
+        'Authorization': `Bearer ${openAIKey}`,
+        'OpenAI-Beta': 'assistants=v2',
+      },
+    });
+
+    if (!messagesResponse.ok) {
+      const errorData = await messagesResponse.text();
+      console.error('❌ Erro buscando mensagens:', errorData);
+      throw new Error(`Erro buscando mensagens: ${messagesResponse.status}`);
+    }
+
+    const messagesData = await messagesResponse.json();
+    const aiResponse = messagesData.data[0].content[0].text.value;
 
     console.log('✅ Resposta da Sofia IA:', aiResponse.substring(0, 100) + '...');
 
