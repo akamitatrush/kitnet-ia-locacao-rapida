@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useParams } from "react-router-dom";
+import AIChatbot from "@/components/AIChatbot";
 import { 
   MapPin, 
   Bed, 
@@ -195,6 +196,12 @@ const PropertyPublic = () => {
           </div>
         </div>
       </div>
+
+      {/* AI Chatbot */}
+      <AIChatbot 
+        propertyId="1" 
+        propertyTitle={property.name}
+      />
 
       {/* Botão fixo mobile */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t">
