@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -12,22 +12,31 @@ const Login = () => {
     password: ""
   });
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  const { signIn, user, profile } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user && profile) {
+      // Redirect based on user type
+      if (profile.user_type === 'owner') {
+        navigate("/dashboard");
+      } else {
+        navigate("/");
+      }
+    }
+  }, [user, profile, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simular login
-    setTimeout(() => {
-      toast({
-        title: "Login realizado com sucesso!",
-        description: "Bem-vindo de volta ao KITNET.IA",
-      });
-      navigate("/dashboard");
-      setIsLoading(false);
-    }, 1500);
+    const { error } = await signIn(formData.email, formData.password);
+    
+    if (!error) {
+      // Navigation will be handled by useEffect
+    }
+    
+    setIsLoading(false);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

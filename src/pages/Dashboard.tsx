@@ -8,19 +8,45 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Home, Users, TrendingUp, MessageCircle, Clock, DollarSign, 
   Eye, Share2, Settings, Plus, Star, MapPin, Calendar, Phone,
-  Copy, ExternalLink, CheckCircle, AlertCircle, UserCheck, Filter, BarChart3
+  Copy, ExternalLink, CheckCircle, AlertCircle, UserCheck, Filter, BarChart3, LogOut
 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { useDashboardMetrics } from "@/hooks/useDashboardMetrics";
 import { usePropertyAnalytics } from "@/hooks/usePropertyAnalytics";
 import { useRecentLeads } from "@/hooks/useRecentLeads";
 import { PropertyFlow } from "@/components/PropertyFlow";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const { toast } = useToast();
+  const { user, profile, signOut, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
   const [dateFilter, setDateFilter] = useState("all");
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
+
+  // Redirect if not authenticated or not an owner
+  useEffect(() => {
+    if (!authLoading && (!user || !profile || profile.user_type !== 'owner')) {
+      navigate('/login');
+    }
+  }, [user, profile, authLoading, navigate]);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <Skeleton className="h-8 w-48 mx-auto mb-4" />
+          <Skeleton className="h-4 w-32 mx-auto" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!user || !profile || profile.user_type !== 'owner') {
+    return null;
+  }
 
   // Real data from Supabase
   const metrics = useDashboardMetrics(dateFilter);
@@ -119,13 +145,19 @@ const Dashboard = () => {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
-                <p className="text-gray-600">Bem-vindo de volta, Sérgio!</p>
+                <p className="text-gray-600">Bem-vindo de volta, {profile.full_name || 'Proprietário'}!</p>
               </div>
             </div>
-            <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white">
-              <Plus className="w-4 h-4 mr-2" />
-              Novo Imóvel
-            </Button>
+            <div className="flex items-center space-x-3">
+              <Button variant="outline" onClick={signOut}>
+                <LogOut className="w-4 h-4 mr-2" />
+                Sair
+              </Button>
+              <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white">
+                <Plus className="w-4 h-4 mr-2" />
+                Novo Imóvel
+              </Button>
+            </div>
           </div>
         </div>
       </div>

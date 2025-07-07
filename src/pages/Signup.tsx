@@ -1,41 +1,59 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 const Signup = () => {
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
     password: "",
-    phone: ""
+    phone: "",
+    userType: "visitor" as "owner" | "visitor"
   });
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  const { signUp, user, profile } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user && profile) {
+      // Redirect based on user type
+      if (profile.user_type === 'owner') {
+        navigate("/dashboard");
+      } else {
+        navigate("/");
+      }
+    }
+  }, [user, profile, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simular criação de conta
-    setTimeout(() => {
-      toast({
-        title: "Conta criada com sucesso!",
-        description: "Verifique seu e-mail para ativar sua conta.",
-      });
+    const { error } = await signUp(formData.email, formData.password, formData.fullName, formData.userType);
+    
+    if (!error) {
       navigate("/verify");
-      setIsLoading(false);
-    }, 1500);
+    }
+    
+    setIsLoading(false);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
       ...prev,
       [e.target.name]: e.target.value
+    }));
+  };
+
+  const handleUserTypeChange = (value: "owner" | "visitor") => {
+    setFormData(prev => ({
+      ...prev,
+      userType: value
     }));
   };
 
@@ -103,7 +121,7 @@ const Signup = () => {
                 />
               </div>
               
-              <div className="space-y-2">
+               <div className="space-y-2">
                 <Label htmlFor="phone">Telefone</Label>
                 <Input
                   id="phone"
@@ -112,9 +130,21 @@ const Signup = () => {
                   placeholder="(11) 99999-9999"
                   value={formData.phone}
                   onChange={handleChange}
-                  required
                   className="h-11"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="userType">Tipo de usuário</Label>
+                <Select value={formData.userType} onValueChange={handleUserTypeChange}>
+                  <SelectTrigger className="h-11">
+                    <SelectValue placeholder="Selecione o tipo de usuário" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="visitor">Interessado em alugar</SelectItem>
+                    <SelectItem value="owner">Proprietário/Locador</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <Button 

@@ -5,11 +5,59 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, Home, Bot, Filter, FileText, Star, Users, Clock, TrendingUp, Phone, Mail, MapPin } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
+import { Check, Home, Bot, Filter, FileText, Star, Users, Clock, TrendingUp, Phone, Mail, MapPin, LogOut, User, Search, Heart, ArrowRight, Bed, Bath } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ChatbotDemo from '@/components/ChatbotDemo';
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+
+interface Property {
+  id: string;
+  title: string;
+  address: string;
+  neighborhood: string | null;
+  rent: number;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  area_sqm: number | null;
+  property_type: string;
+  images: string[] | null;
+}
 
 const Index = () => {
+  const { user, profile, signOut } = useAuth();
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadProperties();
+  }, []);
+
+  const loadProperties = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('properties')
+        .select('id, title, address, neighborhood, rent, bedrooms, bathrooms, area_sqm, property_type, images')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(12);
+
+      if (error) throw error;
+      setProperties(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar imóveis:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredProperties = properties.filter(property =>
+    property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    property.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    property.neighborhood?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
   const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
   const [selectedPropertyCount, setSelectedPropertyCount] = useState('');
   const [isVisible, setIsVisible] = useState(false);
@@ -95,20 +143,39 @@ const Index = () => {
                 <span className="text-indigo-500">.IA</span>
               </span>
             </div>
-            <div className="flex space-x-4">
-              <Button 
-                asChild
-                variant="outline"
-                className="border-blue-600 text-blue-600 hover:bg-blue-50 px-6 py-2 rounded-full transition-all duration-300"
-              >
-                <Link to="/signup">Cadastrar Imóvel</Link>
-              </Button>
-              <Button 
-                asChild
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-2 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg"
-              >
-                <Link to="/login">Fazer Login</Link>
-              </Button>
+            <div className="flex items-center space-x-4">
+              {user ? (
+                <div className="flex items-center space-x-3">
+                  <span className="text-sm text-gray-600">
+                    Olá, {profile?.full_name || 'Usuário'}
+                  </span>
+                  {profile?.user_type === 'owner' && (
+                    <Button asChild variant="outline" size="sm">
+                      <Link to="/dashboard">Dashboard</Link>
+                    </Button>
+                  )}
+                  <Button variant="outline" size="sm" onClick={signOut}>
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sair
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <Button 
+                    asChild
+                    variant="outline"
+                    className="border-blue-600 text-blue-600 hover:bg-blue-50 px-6 py-2 rounded-full transition-all duration-300"
+                  >
+                    <Link to="/signup">Cadastrar Imóvel</Link>
+                  </Button>
+                  <Button 
+                    asChild
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-2 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg"
+                  >
+                    <Link to="/login">Fazer Login</Link>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -223,8 +290,108 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Properties Section */}
+      {properties.length > 0 && (
+        <section className="py-20 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Imóveis Disponíveis</h2>
+              <p className="text-xl text-gray-600">Encontre sua próxima moradia</p>
+            </div>
+
+            {/* Search Bar */}
+            <div className="max-w-md mx-auto mb-12">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Input
+                  type="text"
+                  placeholder="Buscar por localização..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-3 rounded-full border-2 border-gray-200 focus:border-blue-500"
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+              {(loading ? Array(6).fill(null) : filteredProperties.slice(0, 6)).map((property, index) => (
+                <Card key={property?.id || index} className="hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border-0 shadow-lg bg-gradient-to-br from-white to-gray-50 overflow-hidden">
+                  {loading ? (
+                    <div className="p-6">
+                      <div className="bg-gray-200 animate-pulse h-48 rounded-lg mb-4"></div>
+                      <div className="space-y-3">
+                        <div className="bg-gray-200 animate-pulse h-4 rounded"></div>
+                        <div className="bg-gray-200 animate-pulse h-4 rounded w-3/4"></div>
+                        <div className="bg-gray-200 animate-pulse h-6 rounded w-1/2"></div>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="h-48 bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
+                        <Home className="w-16 h-16 text-blue-600" />
+                      </div>
+                      <CardContent className="p-6">
+                        <div className="flex justify-between items-start mb-3">
+                          <h3 className="font-bold text-lg text-gray-800 truncate">{property.title}</h3>
+                          <Badge className="bg-blue-100 text-blue-800 text-xs">{property.property_type}</Badge>
+                        </div>
+                        
+                        <div className="flex items-center text-gray-600 mb-3">
+                          <MapPin className="w-4 h-4 mr-1" />
+                          <span className="text-sm truncate">{property.address}</span>
+                        </div>
+                        
+                        <div className="flex items-center space-x-4 mb-4 text-sm text-gray-600">
+                          {property.bedrooms && (
+                            <div className="flex items-center">
+                              <Bed className="w-4 h-4 mr-1" />
+                              <span>{property.bedrooms}</span>
+                            </div>
+                          )}
+                          {property.bathrooms && (
+                            <div className="flex items-center">
+                              <Bath className="w-4 h-4 mr-1" />
+                              <span>{property.bathrooms}</span>
+                            </div>
+                          )}
+                          {property.area_sqm && (
+                            <div className="flex items-center">
+                              <span>{property.area_sqm}m²</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="text-2xl font-bold text-green-600">
+                            R$ {property.rent.toLocaleString()}
+                          </div>
+                          <Link to={`/imovel/${property.id}`}>
+                            <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                              Ver Detalhes
+                              <ArrowRight className="w-4 h-4 ml-1" />
+                            </Button>
+                          </Link>
+                        </div>
+                      </CardContent>
+                    </>
+                  )}
+                </Card>
+              ))}
+            </div>
+
+            {filteredProperties.length > 6 && (
+              <div className="text-center mt-12">
+                <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-3 rounded-full">
+                  Ver Mais Imóveis
+                </Button>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
       {/* Testimonials */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">O que nossos usuários dizem</h2>

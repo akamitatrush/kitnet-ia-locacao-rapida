@@ -29,7 +29,7 @@ const App = () => (
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/configuracoes" element={<Configuracoes />} />
-          <Route path="/imovel/:propertyName" element={<PropertyPublic />} />
+          <Route path="/imovel/:propertyId" element={<PropertyPublic />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
