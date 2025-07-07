@@ -16,6 +16,7 @@ import { useDashboardMetrics } from "@/hooks/useDashboardMetrics";
 import { usePropertyAnalytics } from "@/hooks/usePropertyAnalytics";
 import { useRecentLeads } from "@/hooks/useRecentLeads";
 import { PropertyFlow } from "@/components/PropertyFlow";
+import PropertyRegistrationModal from "@/components/PropertyRegistrationModal";
 import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
@@ -25,6 +26,12 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [dateFilter, setDateFilter] = useState("all");
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
+  const [isPropertyModalOpen, setIsPropertyModalOpen] = useState(false);
+
+  // All hooks must be called before any conditional returns
+  const metrics = useDashboardMetrics(dateFilter);
+  const { properties, loading: propertiesLoading } = usePropertyAnalytics();
+  const { leads, loading: leadsLoading } = useRecentLeads();
 
   // Redirect if not authenticated or not an owner
   useEffect(() => {
@@ -47,11 +54,6 @@ const Dashboard = () => {
   if (!user || !profile || profile.user_type !== 'owner') {
     return null;
   }
-
-  // Real data from Supabase
-  const metrics = useDashboardMetrics(dateFilter);
-  const { properties, loading: propertiesLoading } = usePropertyAnalytics();
-  const { leads, loading: leadsLoading } = useRecentLeads();
 
   const copyLink = (link: string) => {
     navigator.clipboard.writeText(link);
@@ -153,7 +155,10 @@ const Dashboard = () => {
                 <LogOut className="w-4 h-4 mr-2" />
                 Sair
               </Button>
-              <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white">
+              <Button 
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                onClick={() => setIsPropertyModalOpen(true)}
+              >
                 <Plus className="w-4 h-4 mr-2" />
                 Novo Imóvel
               </Button>
@@ -349,7 +354,10 @@ const Dashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    <Button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white">
+                    <Button 
+                      className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                      onClick={() => setIsPropertyModalOpen(true)}
+                    >
                       <Plus className="w-4 h-4 mr-2" />
                       Cadastrar Novo Imóvel
                     </Button>
@@ -589,6 +597,12 @@ const Dashboard = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Property Registration Modal */}
+      <PropertyRegistrationModal 
+        isOpen={isPropertyModalOpen} 
+        onClose={() => setIsPropertyModalOpen(false)} 
+      />
     </div>
   );
 };
