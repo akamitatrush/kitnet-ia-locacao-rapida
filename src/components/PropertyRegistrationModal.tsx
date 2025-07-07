@@ -77,11 +77,15 @@ const PropertyRegistrationModal = ({ isOpen, onClose }: PropertyRegistrationModa
   };
 
   const handleSubmit = () => {
+    console.log('Formulário submetido:', formData);
+    
     // Simulate API call
     toast({
       title: "Sucesso! 🎉",
       description: "Seu imóvel foi cadastrado. O chatbot já está ativo!",
     });
+    
+    console.log('Toast enviado');
     
     // Reset form and close
     setFormData({

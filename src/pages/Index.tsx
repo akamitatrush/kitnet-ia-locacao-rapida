@@ -21,7 +21,10 @@ const Index = () => {
 
   const openLeadModal = () => setIsLeadModalOpen(true);
   const closeLeadModal = () => setIsLeadModalOpen(false);
-  const openPropertyModal = () => setIsPropertyModalOpen(true);
+  const openPropertyModal = () => {
+    console.log('Abrindo modal de propriedade');
+    setIsPropertyModalOpen(true);
+  };
   const closePropertyModal = () => setIsPropertyModalOpen(false);
 
   const features = [
