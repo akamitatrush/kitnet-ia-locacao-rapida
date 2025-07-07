@@ -35,10 +35,15 @@ serve(async (req) => {
       .select('*')
       .eq('id', propertyId)
       .eq('is_active', true)
-      .single();
+      .maybeSingle();
 
-    if (propertyError || !property) {
+    if (propertyError) {
       console.error('❌ Erro buscando imóvel:', propertyError);
+      throw new Error(`Erro ao buscar imóvel: ${propertyError.message}`);
+    }
+
+    if (!property) {
+      console.error('❌ Imóvel não encontrado:', propertyId);
       throw new Error('Imóvel não encontrado ou inativo');
     }
 
@@ -269,7 +274,12 @@ Seja sempre natural, consultiva e focada em qualificar adequadamente cada intere
     if (leadMatch) {
       leadQualified = true;
       console.log('🎯 Lead qualificado pela Sofia!');
-      
+    }
+
+    // Limpar marcadores da resposta
+    const cleanResponse = aiResponse.replace(/\[LEAD_QUALIFICADO:.*?\]/g, '').trim();
+    
+    if (leadMatch) {
       // Salvar conversa qualificada no banco
       const { error: saveError } = await supabase
         .from('chatbot_conversations')
@@ -286,9 +296,6 @@ Seja sempre natural, consultiva e focada em qualificar adequadamente cada intere
         console.log('✅ Conversa salva com sucesso!');
       }
     }
-
-    // Limpar marcadores da resposta
-    const cleanResponse = aiResponse.replace(/\[LEAD_QUALIFICADO:.*?\]/g, '').trim();
 
     return new Response(
       JSON.stringify({ 

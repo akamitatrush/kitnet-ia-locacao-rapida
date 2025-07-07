@@ -199,7 +199,7 @@ const PropertyPublic = () => {
 
       {/* AI Chatbot */}
       <AIChatbot 
-        propertyId="1" 
+        propertyId="00000000-0000-0000-0000-000000000001" 
         propertyTitle={property.name}
       />
 
