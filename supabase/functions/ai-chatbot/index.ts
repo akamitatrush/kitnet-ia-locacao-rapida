@@ -21,42 +21,47 @@ serve(async (req) => {
   try {
     const { message, propertyId, conversationHistory = [] } = await req.json();
 
-    // Get property details
-    const { data: property, error: propertyError } = await supabase
-      .from('properties')
-      .select('*')
-      .eq('id', propertyId)
-      .single();
-
-    if (propertyError || !property) {
-      throw new Error('Imóvel não encontrado');
+    if (!message || !propertyId) {
+      throw new Error('Mensagem e ID do imóvel são obrigatórios');
     }
 
-    // Get property owner details
-    const { data: owner, error: ownerError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', property.user_id)
-      .single();
+    console.log('Recebida mensagem:', message, 'para propriedade:', propertyId);
 
-    if (ownerError || !owner) {
-      throw new Error('Proprietário não encontrado');
-    }
+    // Get property details - usando dados mock para teste
+    const mockProperty = {
+      id: propertyId,
+      title: "Kitnet Studio Centro",
+      address: "Centro, São Paulo - SP",
+      rent: 1200,
+      property_type: "Kitnet",
+      bedrooms: 1,
+      bathrooms: 1,
+      area_sqm: 35,
+      description: "Linda kitnet mobiliada no centro de São Paulo. Perfeita para estudantes e profissionais. Próxima ao metrô e universidades.",
+      amenities: ["Ar condicionado", "Internet Wi-Fi", "Mobiliado", "Portaria 24h"],
+      user_id: "mock-user-id"
+    };
+
+    // Usar dados mock do proprietário para teste
+    const mockOwner = {
+      id: "mock-user-id",
+      display_name: "Proprietário Teste"
+    };
 
     // Create AI assistant prompt with property information
     const systemPrompt = `
 Você é Sofia, uma assistente virtual especializada em imóveis. Você está atendendo interessados no seguinte imóvel:
 
 **INFORMAÇÕES DO IMÓVEL:**
-- Título: ${property.title}
-- Endereço: ${property.address}
-- Preço: R$ ${property.rent}/mês
-- Tipo: ${property.property_type}
-- Quartos: ${property.bedrooms}
-- Banheiros: ${property.bathrooms}
-- Área: ${property.area_sqm}m²
-- Descrição: ${property.description}
-- Características: ${property.amenities?.join(', ') || 'Não especificadas'}
+- Título: ${mockProperty.title}
+- Endereço: ${mockProperty.address}
+- Preço: R$ ${mockProperty.rent}/mês
+- Tipo: ${mockProperty.property_type}
+- Quartos: ${mockProperty.bedrooms}
+- Banheiros: ${mockProperty.bathrooms}
+- Área: ${mockProperty.area_sqm}m²
+- Descrição: ${mockProperty.description}
+- Características: ${mockProperty.amenities?.join(', ') || 'Não especificadas'}
 
 **SEU PAPEL:**
 1. Seja amigável, profissional e prestativa
