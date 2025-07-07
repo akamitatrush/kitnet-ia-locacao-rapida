@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { Upload, X, Check } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PropertyRegistrationModalProps {
   isOpen: boolean;
@@ -16,12 +18,10 @@ interface PropertyRegistrationModalProps {
 
 const PropertyRegistrationModal = ({ isOpen, onClose }: PropertyRegistrationModalProps) => {
   const { toast } = useToast();
+  const { user, profile } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    // Owner info
-    ownerName: '',
-    ownerEmail: '',
-    ownerPhone: '',
     // Property info
     address: '',
     neighborhood: '',
@@ -76,42 +76,87 @@ const PropertyRegistrationModal = ({ isOpen, onClose }: PropertyRegistrationModa
     if (currentStep > 1) setCurrentStep(prev => prev - 1);
   };
 
-  const handleSubmit = () => {
-    console.log('Formulário submetido:', formData);
-    
-    // Simulate API call
-    toast({
-      title: "Sucesso! 🎉",
-      description: "Seu imóvel foi cadastrado. Redirecionando para o dashboard...",
-    });
-    
-    console.log('Toast enviado');
-    
-    // Reset form and redirect to dashboard
-    setFormData({
-      ownerName: '', ownerEmail: '', ownerPhone: '',
-      address: '', neighborhood: '', city: '',
-      rent: '', condo: '', iptu: '', area: '',
-      bedrooms: '', bathrooms: '', description: '',
-      amenities: [], photos: []
-    });
-    setCurrentStep(1);
-    onClose();
-    
-    // Redirect to dashboard after a short delay
-    setTimeout(() => {
-      window.location.href = '/dashboard';
-    }, 1500);
+  const handleSubmit = async () => {
+    if (!user) {
+      toast({
+        title: "Erro",
+        description: "Você precisa estar logado para cadastrar um imóvel.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const { data, error } = await supabase
+        .from('properties')
+        .insert([
+          {
+            user_id: user.id,
+            title: `${formData.bedrooms} quarto(s) em ${formData.neighborhood}`,
+            description: formData.description,
+            address: formData.address,
+            neighborhood: formData.neighborhood,
+            rent: parseFloat(formData.rent),
+            bedrooms: parseInt(formData.bedrooms),
+            bathrooms: parseInt(formData.bathrooms),
+            area_sqm: formData.area ? parseInt(formData.area) : null,
+            amenities: formData.amenities,
+            property_type: 'Kitnet',
+            is_active: true
+          }
+        ])
+        .select();
+
+      if (error) {
+        console.error('Erro ao cadastrar imóvel:', error);
+        toast({
+          title: "Erro ao cadastrar imóvel",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Sucesso! 🎉",
+        description: "Seu imóvel foi cadastrado com sucesso!",
+      });
+
+      // Reset form
+      setFormData({
+        address: '', neighborhood: '', city: '',
+        rent: '', condo: '', iptu: '', area: '',
+        bedrooms: '', bathrooms: '', description: '',
+        amenities: [], photos: []
+      });
+      setCurrentStep(1);
+      onClose();
+      
+      // Refresh the page to show the new property
+      window.location.reload();
+
+    } catch (error: any) {
+      console.error('Erro inesperado:', error);
+      toast({
+        title: "Erro inesperado",
+        description: "Tente novamente em alguns momentos.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const isStepComplete = () => {
     switch (currentStep) {
       case 1:
-        return formData.ownerName && formData.ownerEmail && formData.ownerPhone;
+        return formData.address && formData.neighborhood && formData.rent;
       case 2:
-        return formData.address && formData.neighborhood && formData.rent && formData.area;
+        return formData.bedrooms && formData.bathrooms && formData.area;
       case 3:
-        return formData.description && formData.photos.length > 0;
+        return formData.description;
       default:
         return false;
     }
@@ -141,50 +186,10 @@ const PropertyRegistrationModal = ({ isOpen, onClose }: PropertyRegistrationModa
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Step 1: Owner Information */}
+          {/* Step 1: Basic Property Info */}
           {currentStep === 1 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-800">Seus Dados</h3>
-              
-              <div>
-                <Label htmlFor="ownerName">Nome Completo</Label>
-                <Input
-                  id="ownerName"
-                  value={formData.ownerName}
-                  onChange={(e) => handleInputChange('ownerName', e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="ownerEmail">E-mail</Label>
-                <Input
-                  id="ownerEmail"
-                  type="email"
-                  value={formData.ownerEmail}
-                  onChange={(e) => handleInputChange('ownerEmail', e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="ownerPhone">WhatsApp</Label>
-                <Input
-                  id="ownerPhone"
-                  type="tel"
-                  placeholder="(11) 99999-9999"
-                  value={formData.ownerPhone}
-                  onChange={(e) => handleInputChange('ownerPhone', e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Step 2: Property Details */}
-          {currentStep === 2 && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-800">Dados do Imóvel</h3>
+              <h3 className="text-lg font-semibold text-gray-800">Informações Básicas</h3>
               
               <div>
                 <Label htmlFor="address">Endereço Completo</Label>
@@ -193,6 +198,7 @@ const PropertyRegistrationModal = ({ isOpen, onClose }: PropertyRegistrationModa
                   value={formData.address}
                   onChange={(e) => handleInputChange('address', e.target.value)}
                   className="mt-1"
+                  placeholder="Rua, número, complemento"
                 />
               </div>
 
@@ -213,43 +219,30 @@ const PropertyRegistrationModal = ({ isOpen, onClose }: PropertyRegistrationModa
                     value={formData.city}
                     onChange={(e) => handleInputChange('city', e.target.value)}
                     className="mt-1"
+                    placeholder="São Paulo"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="rent">Aluguel (R$)</Label>
-                  <Input
-                    id="rent"
-                    type="number"
-                    value={formData.rent}
-                    onChange={(e) => handleInputChange('rent', e.target.value)}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="condo">Condomínio (R$)</Label>
-                  <Input
-                    id="condo"
-                    type="number"
-                    value={formData.condo}
-                    onChange={(e) => handleInputChange('condo', e.target.value)}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="iptu">IPTU (R$)</Label>
-                  <Input
-                    id="iptu"
-                    type="number"
-                    value={formData.iptu}
-                    onChange={(e) => handleInputChange('iptu', e.target.value)}
-                    className="mt-1"
-                  />
-                </div>
+              <div>
+                <Label htmlFor="rent">Valor do Aluguel (R$)</Label>
+                <Input
+                  id="rent"
+                  type="number"
+                  value={formData.rent}
+                  onChange={(e) => handleInputChange('rent', e.target.value)}
+                  className="mt-1"
+                  placeholder="1200"
+                />
               </div>
+            </div>
+          )}
 
+          {/* Step 2: Property Details */}
+          {currentStep === 2 && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-800">Características do Imóvel</h3>
+              
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="area">Área (m²)</Label>
@@ -259,6 +252,7 @@ const PropertyRegistrationModal = ({ isOpen, onClose }: PropertyRegistrationModa
                     value={formData.area}
                     onChange={(e) => handleInputChange('area', e.target.value)}
                     className="mt-1"
+                    placeholder="45"
                   />
                 </div>
                 <div>
@@ -285,6 +279,31 @@ const PropertyRegistrationModal = ({ isOpen, onClose }: PropertyRegistrationModa
                       <SelectItem value="2">2 Banheiros</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="condo">Condomínio (R$)</Label>
+                  <Input
+                    id="condo"
+                    type="number"
+                    value={formData.condo}
+                    onChange={(e) => handleInputChange('condo', e.target.value)}
+                    className="mt-1"
+                    placeholder="150"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="iptu">IPTU (R$)</Label>
+                  <Input
+                    id="iptu"
+                    type="number"
+                    value={formData.iptu}
+                    onChange={(e) => handleInputChange('iptu', e.target.value)}
+                    className="mt-1"
+                    placeholder="80"
+                  />
                 </div>
               </div>
             </div>
@@ -394,10 +413,10 @@ const PropertyRegistrationModal = ({ isOpen, onClose }: PropertyRegistrationModa
               <Button
                 type="button"
                 onClick={handleSubmit}
-                disabled={!isStepComplete()}
+                disabled={!isStepComplete() || isSubmitting}
                 className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
               >
-                Finalizar Cadastro
+                {isSubmitting ? "Cadastrando..." : "Finalizar Cadastro"}
               </Button>
             )}
           </div>
