@@ -268,73 +268,78 @@ const Dashboard = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <MessageCircle className="w-5 h-5" />
-                    <span>Atividade Recente</span>
+                    <span>Resumo Executivo</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="flex items-start space-x-3">
-                      <div className="bg-green-100 p-2 rounded-full">
-                        <UserCheck className="w-4 h-4 text-green-600" />
+                    {metrics.loading ? (
+                      <div className="space-y-4">
+                        <Skeleton className="h-16 w-full" />
+                        <Skeleton className="h-16 w-full" />
+                        <Skeleton className="h-16 w-full" />
                       </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Lead qualificado</p>
-                        <p className="text-xs text-gray-600">Maria Silva se interessou pelo imóvel da Rua Augusta</p>
-                        <p className="text-xs text-gray-500">há 2 horas</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="bg-blue-100 p-2 rounded-full">
-                        <Eye className="w-4 h-4 text-blue-600" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Novo interesse</p>
-                        <p className="text-xs text-gray-600">3 pessoas visualizaram seu imóvel hoje</p>
-                        <p className="text-xs text-gray-500">há 4 horas</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="bg-purple-100 p-2 rounded-full">
-                        <Share2 className="w-4 h-4 text-purple-600" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Link compartilhado</p>
-                        <p className="text-xs text-gray-600">Seu imóvel foi compartilhado 5 vezes no WhatsApp</p>
-                        <p className="text-xs text-gray-500">ontem</p>
-                      </div>
-                    </div>
+                    ) : (
+                      <>
+                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+                          <h3 className="font-semibold text-blue-800 mb-2">Status do Portfolio</h3>
+                          <p className="text-sm text-blue-700">
+                            Você tem <strong>{metrics.totalProperties}</strong> imóveis cadastrados com receita mensal de <strong>R$ {metrics.monthlyRevenue.toLocaleString()}</strong>
+                          </p>
+                        </div>
+                        
+                        <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
+                          <h3 className="font-semibold text-green-800 mb-2">Performance de Leads</h3>
+                          <p className="text-sm text-green-700">
+                            <strong>{metrics.totalLeads}</strong> leads captados, com <strong>{metrics.qualifiedLeads}</strong> qualificados ({metrics.conversionRate}% de conversão)
+                          </p>
+                        </div>
+
+                        <div className="bg-gradient-to-r from-purple-50 to-violet-50 p-4 rounded-lg border border-purple-200">
+                          <h3 className="font-semibold text-purple-800 mb-2">Tempo de Conversão</h3>
+                          <p className="text-sm text-purple-700">
+                            Tempo médio para qualificar um lead: <strong>{metrics.averageTime} dias</strong>
+                          </p>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Top Performing Property */}
+              {/* Quick Actions */}
               <Card className="bg-white/60 backdrop-blur-sm border-white/40 shadow-lg">
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <Star className="w-5 h-5" />
-                    <span>Imóvel em Destaque</span>
+                    <span>Ações Rápidas</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-semibold">Kitnet Centro - Rua Augusta</h3>
-                        <p className="text-sm text-gray-600">Rua Augusta, 123</p>
-                        <p className="text-lg font-bold text-green-600 mt-2">R$ 1.200/mês</p>
+                  <div className="space-y-3">
+                    <Button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Cadastrar Novo Imóvel
+                    </Button>
+                    
+                    <Button className="w-full" variant="outline">
+                      <BarChart3 className="w-4 h-4 mr-2" />
+                      Ver Relatório Completo
+                    </Button>
+                    
+                    <Button className="w-full" variant="outline">
+                      <Settings className="w-4 h-4 mr-2" />
+                      Configurações da Sofia IA
+                    </Button>
+
+                    {properties.length > 0 && (
+                      <div className="mt-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                        <h4 className="font-medium text-amber-800 mb-1">🏆 Melhor Performance</h4>
+                        <p className="text-sm text-amber-700">
+                          {properties[0]?.title || 'Seu primeiro imóvel'} - {properties[0]?.leads || 0} leads
+                        </p>
                       </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="text-center">
-                        <p className="text-2xl font-bold text-blue-600">45</p>
-                        <p className="text-xs text-gray-600">Visualizações</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-2xl font-bold text-indigo-600">8</p>
-                        <p className="text-xs text-gray-600">Leads</p>
-                      </div>
-                    </div>
-                    <Badge className="bg-green-100 text-green-800">Disponível</Badge>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -357,6 +362,18 @@ const Dashboard = () => {
                   </Card>
                 ))}
               </div>
+            ) : properties.length === 0 ? (
+              <Card className="bg-white/60 backdrop-blur-sm border-white/40 shadow-lg">
+                <CardContent className="p-8 text-center">
+                  <Home className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-600 mb-2">Nenhum imóvel cadastrado ainda</h3>
+                  <p className="text-gray-500 mb-6">Cadastre seu primeiro imóvel para começar a captar leads automaticamente com a Sofia IA.</p>
+                  <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Cadastrar Primeiro Imóvel
+                  </Button>
+                </CardContent>
+              </Card>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {properties.map((property) => (
