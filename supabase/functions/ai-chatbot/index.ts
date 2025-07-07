@@ -142,7 +142,7 @@ Seja sempre natural, consultiva e focada em qualificar adequadamente cada intere
     console.log('🧠 Enviando para Maria (Assistant API)...');
 
     // ID do Assistant da Maria
-    const assistantId = 'asst_abc123xyz789';
+    const assistantId = 'asst_WySSIEkxyfXjAur6qFUYm2cN';
 
     // Criar uma nova thread para a conversa
     const threadResponse = await fetch('https://api.openai.com/v1/threads', {
