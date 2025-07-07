@@ -6,9 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, Home, Bot, Filter, FileText, Star, Users, Clock, TrendingUp, Phone, Mail, MapPin } from 'lucide-react';
+import ChatbotDemo from '@/components/ChatbotDemo';
+import PropertyRegistrationModal from '@/components/PropertyRegistrationModal';
 
 const Index = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
+  const [isPropertyModalOpen, setIsPropertyModalOpen] = useState(false);
   const [selectedPropertyCount, setSelectedPropertyCount] = useState('');
   const [isVisible, setIsVisible] = useState(false);
 
@@ -16,8 +19,10 @@ const Index = () => {
     setIsVisible(true);
   }, []);
 
-  const openModal = () => setIsModalOpen(true);
-  const closeModal = () => setIsModalOpen(false);
+  const openLeadModal = () => setIsLeadModalOpen(true);
+  const closeLeadModal = () => setIsLeadModalOpen(false);
+  const openPropertyModal = () => setIsPropertyModalOpen(true);
+  const closePropertyModal = () => setIsPropertyModalOpen(false);
 
   const features = [
     {
@@ -93,12 +98,21 @@ const Index = () => {
                 <span className="text-indigo-500">.IA</span>
               </span>
             </div>
-            <Button 
-              onClick={openModal}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-2 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg"
-            >
-              Testar Grátis
-            </Button>
+            <div className="flex space-x-4">
+              <Button 
+                onClick={openPropertyModal}
+                variant="outline"
+                className="border-blue-600 text-blue-600 hover:bg-blue-50 px-6 py-2 rounded-full transition-all duration-300"
+              >
+                Cadastrar Imóvel
+              </Button>
+              <Button 
+                onClick={openLeadModal}
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-2 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg"
+              >
+                Testar Grátis
+              </Button>
+            </div>
           </div>
         </div>
       </nav>
@@ -114,12 +128,20 @@ const Index = () => {
             <p className="text-xl md:text-2xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
               O jeito inteligente de manter seus imóveis sempre ocupados. Automatize atendimento, qualificação de leads e fechamento de contratos.
             </p>
-            <Button 
-              onClick={openModal}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-4 px-10 rounded-full text-lg transition-all duration-300 transform hover:scale-105 shadow-xl"
-            >
-              Começar Agora
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button 
+                onClick={openPropertyModal}
+                className="bg-white text-blue-600 hover:bg-gray-100 font-bold py-4 px-10 rounded-full text-lg transition-all duration-300 transform hover:scale-105 shadow-xl"
+              >
+                Cadastrar Imóvel
+              </Button>
+              <Button 
+                onClick={openLeadModal}
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-4 px-10 rounded-full text-lg transition-all duration-300 transform hover:scale-105 shadow-xl"
+              >
+                Testar Grátis
+              </Button>
+            </div>
           </div>
           
           {/* Stats Cards */}
@@ -184,12 +206,21 @@ const Index = () => {
             </div>
             
             <div className="text-center mt-12">
-              <Button 
-                onClick={openModal}
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-4 px-10 rounded-full text-lg transition-all duration-300 transform hover:scale-105 shadow-xl"
-              >
-                Quero testar grátis
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button 
+                  onClick={openPropertyModal}
+                  variant="outline"
+                  className="border-blue-600 text-blue-600 hover:bg-blue-50 font-bold py-4 px-10 rounded-full text-lg transition-all duration-300 transform hover:scale-105"
+                >
+                  Cadastrar Primeiro Imóvel
+                </Button>
+                <Button 
+                  onClick={openLeadModal}
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-4 px-10 rounded-full text-lg transition-all duration-300 transform hover:scale-105 shadow-xl"
+                >
+                  Quero testar grátis
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -235,12 +266,21 @@ const Index = () => {
         <div className="container mx-auto px-4 text-center relative">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">Pronto para revolucionar como você aluga suas kitnets?</h2>
           <p className="text-xl mb-10 max-w-2xl mx-auto opacity-90">Junte-se a centenas de proprietários que já reduziram a vacância e simplificaram a locação com IA</p>
-          <Button 
-            onClick={openModal}
-            className="bg-white text-blue-600 hover:bg-gray-100 font-bold py-4 px-10 rounded-full text-lg transition-all duration-300 transform hover:scale-105 shadow-xl"
-          >
-            Cadastrar meu primeiro imóvel
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button 
+              onClick={openPropertyModal}
+              className="bg-white text-blue-600 hover:bg-gray-100 font-bold py-4 px-10 rounded-full text-lg transition-all duration-300 transform hover:scale-105 shadow-xl"
+            >
+              Cadastrar meu primeiro imóvel
+            </Button>
+            <Button 
+              onClick={openLeadModal}
+              variant="outline"
+              className="border-white text-white hover:bg-white hover:text-blue-600 font-bold py-4 px-10 rounded-full text-lg transition-all duration-300 transform hover:scale-105"
+            >
+              Testar o Chatbot
+            </Button>
+          </div>
         </div>
       </section>
 
@@ -297,40 +337,40 @@ const Index = () => {
         </div>
       </footer>
 
-      {/* Registration Modal */}
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+      {/* Lead Registration Modal */}
+      <Dialog open={isLeadModalOpen} onOpenChange={setIsLeadModalOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-center bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              Cadastro Gratuito
+              Teste Grátis
             </DialogTitle>
-            <p className="text-gray-600 text-center">Comece a alugar suas kitnets com IA hoje mesmo</p>
+            <p className="text-gray-600 text-center">Experimente nosso chatbot de qualificação agora</p>
           </DialogHeader>
           
           <form className="space-y-4" onSubmit={(e) => {
             e.preventDefault();
-            alert('Cadastro realizado com sucesso! Em breve entraremos em contato.');
-            closeModal();
+            alert('Cadastro realizado! Acesse o chatbot na tela principal.');
+            closeLeadModal();
           }}>
             <div>
-              <Label htmlFor="name">Nome Completo</Label>
-              <Input id="name" type="text" required className="mt-1" />
+              <Label htmlFor="leadName">Nome Completo</Label>
+              <Input id="leadName" type="text" required className="mt-1" />
             </div>
             
             <div>
-              <Label htmlFor="email">E-mail</Label>
-              <Input id="email" type="email" required className="mt-1" />
+              <Label htmlFor="leadEmail">E-mail</Label>
+              <Input id="leadEmail" type="email" required className="mt-1" />
             </div>
             
             <div>
-              <Label htmlFor="whatsapp">WhatsApp</Label>
-              <Input id="whatsapp" type="tel" placeholder="(00) 00000-0000" required className="mt-1" />
+              <Label htmlFor="leadWhatsapp">WhatsApp</Label>
+              <Input id="leadWhatsapp" type="tel" placeholder="(00) 00000-0000" required className="mt-1" />
             </div>
             
             <div>
               <Label>Quantos imóveis você tem?</Label>
               <div className="grid grid-cols-3 gap-2 mt-2">
-                {['1', '5', '10+'].map((count) => (
+                {['1', '2-5', '6+'].map((count) => (
                   <Button
                     key={count}
                     type="button"
@@ -349,11 +389,20 @@ const Index = () => {
               className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 mt-6"
               disabled={!selectedPropertyCount}
             >
-              Cadastrar e Testar Grátis
+              Testar Chatbot Grátis
             </Button>
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Property Registration Modal */}
+      <PropertyRegistrationModal 
+        isOpen={isPropertyModalOpen} 
+        onClose={closePropertyModal} 
+      />
+
+      {/* Chatbot Demo */}
+      <ChatbotDemo />
     </div>
   );
 };
