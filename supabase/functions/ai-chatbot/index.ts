@@ -83,11 +83,47 @@ Responda de forma natural e conversacional. Se conseguir todas as informações 
 
     console.log('🧠 Enviando para OpenAI...');
 
+    // Verificar se a API Key existe
+    const openAIKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openAIKey) {
+      console.error('❌ OPENAI_API_KEY não configurada');
+      
+      // Fallback response para testar a função
+      const fallbackResponse = `Olá! 😊 Eu sou a Sofia, assistente virtual do imóvel "${mockProperty.title}". 
+
+No momento estou com algumas dificuldades técnicas (API não configurada), mas posso te dar as informações básicas:
+
+📍 **Endereço:** ${mockProperty.address}
+💰 **Preço:** R$ ${mockProperty.rent}/mês
+🏠 **Tipo:** ${mockProperty.property_type} com ${mockProperty.bedrooms} quarto e ${mockProperty.bathrooms} banheiro
+📐 **Área:** ${mockProperty.area_sqm}m²
+
+**Características:**
+${mockProperty.amenities.map(item => `✓ ${item}`).join('\n')}
+
+Para mais informações ou agendar uma visita, entre em contato diretamente pelo WhatsApp! 
+
+Em breve estarei funcionando 100% com IA! 🤖`;
+
+      return new Response(
+        JSON.stringify({ 
+          response: fallbackResponse,
+          leadQualified: false,
+          fallback: true
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    console.log('🔑 API Key encontrada');
+
     // Call OpenAI API
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'Authorization': `Bearer ${openAIKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
