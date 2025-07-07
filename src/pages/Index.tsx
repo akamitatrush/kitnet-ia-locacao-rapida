@@ -6,12 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, Home, Bot, Filter, FileText, Star, Users, Clock, TrendingUp, Phone, Mail, MapPin } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import ChatbotDemo from '@/components/ChatbotDemo';
-import PropertyRegistrationModal from '@/components/PropertyRegistrationModal';
 
 const Index = () => {
   const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
-  const [isPropertyModalOpen, setIsPropertyModalOpen] = useState(false);
   const [selectedPropertyCount, setSelectedPropertyCount] = useState('');
   const [isVisible, setIsVisible] = useState(false);
 
@@ -21,11 +20,6 @@ const Index = () => {
 
   const openLeadModal = () => setIsLeadModalOpen(true);
   const closeLeadModal = () => setIsLeadModalOpen(false);
-  const openPropertyModal = () => {
-    console.log('Abrindo modal de propriedade');
-    setIsPropertyModalOpen(true);
-  };
-  const closePropertyModal = () => setIsPropertyModalOpen(false);
 
   const features = [
     {
@@ -103,17 +97,17 @@ const Index = () => {
             </div>
             <div className="flex space-x-4">
               <Button 
-                onClick={openPropertyModal}
+                asChild
                 variant="outline"
                 className="border-blue-600 text-blue-600 hover:bg-blue-50 px-6 py-2 rounded-full transition-all duration-300"
               >
-                Cadastrar Imóvel
+                <Link to="/signup">Cadastrar Imóvel</Link>
               </Button>
               <Button 
-                onClick={openLeadModal}
+                asChild
                 className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-2 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg"
               >
-                Testar Grátis
+                <Link to="/login">Fazer Login</Link>
               </Button>
             </div>
           </div>
@@ -133,16 +127,16 @@ const Index = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 
-                onClick={openPropertyModal}
+                asChild
                 className="bg-white text-blue-600 hover:bg-gray-100 font-bold py-4 px-10 rounded-full text-lg transition-all duration-300 transform hover:scale-105 shadow-xl"
               >
-                Cadastrar Imóvel
+                <Link to="/signup">Cadastrar Imóvel</Link>
               </Button>
               <Button 
-                onClick={openLeadModal}
+                asChild
                 className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-4 px-10 rounded-full text-lg transition-all duration-300 transform hover:scale-105 shadow-xl"
               >
-                Testar Grátis
+                <Link to="/login">Testar Grátis</Link>
               </Button>
             </div>
           </div>
@@ -211,17 +205,17 @@ const Index = () => {
             <div className="text-center mt-12">
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button 
-                  onClick={openPropertyModal}
+                  asChild
                   variant="outline"
                   className="border-blue-600 text-blue-600 hover:bg-blue-50 font-bold py-4 px-10 rounded-full text-lg transition-all duration-300 transform hover:scale-105"
                 >
-                  Cadastrar Primeiro Imóvel
+                  <Link to="/signup">Cadastrar Primeiro Imóvel</Link>
                 </Button>
                 <Button 
-                  onClick={openLeadModal}
+                  asChild
                   className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-4 px-10 rounded-full text-lg transition-all duration-300 transform hover:scale-105 shadow-xl"
                 >
-                  Quero testar grátis
+                  <Link to="/login">Quero testar grátis</Link>
                 </Button>
               </div>
             </div>
@@ -269,21 +263,21 @@ const Index = () => {
         <div className="container mx-auto px-4 text-center relative">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">Pronto para revolucionar como você aluga suas kitnets?</h2>
           <p className="text-xl mb-10 max-w-2xl mx-auto opacity-90">Junte-se a centenas de proprietários que já reduziram a vacância e simplificaram a locação com IA</p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              onClick={openPropertyModal}
-              className="bg-white text-blue-600 hover:bg-gray-100 font-bold py-4 px-10 rounded-full text-lg transition-all duration-300 transform hover:scale-105 shadow-xl"
-            >
-              Cadastrar meu primeiro imóvel
-            </Button>
-            <Button 
-              onClick={openLeadModal}
-              variant="outline"
-              className="border-white text-white hover:bg-white hover:text-blue-600 font-bold py-4 px-10 rounded-full text-lg transition-all duration-300 transform hover:scale-105"
-            >
-              Testar o Chatbot
-            </Button>
-          </div>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button 
+                asChild
+                className="bg-white text-blue-600 hover:bg-gray-100 font-bold py-4 px-10 rounded-full text-lg transition-all duration-300 transform hover:scale-105 shadow-xl"
+              >
+                <Link to="/signup">Cadastrar meu primeiro imóvel</Link>
+              </Button>
+              <Button 
+                asChild
+                variant="outline"
+                className="border-white text-white hover:bg-white hover:text-blue-600 font-bold py-4 px-10 rounded-full text-lg transition-all duration-300 transform hover:scale-105"
+              >
+                <Link to="/login">Testar o Chatbot</Link>
+              </Button>
+            </div>
         </div>
       </section>
 
@@ -400,12 +394,6 @@ const Index = () => {
           </form>
         </DialogContent>
       </Dialog>
-
-      {/* Property Registration Modal */}
-      <PropertyRegistrationModal 
-        isOpen={isPropertyModalOpen} 
-        onClose={closePropertyModal} 
-      />
 
       {/* Chatbot Demo */}
       <ChatbotDemo />
