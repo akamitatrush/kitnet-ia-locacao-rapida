@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -23,23 +24,25 @@ serve(async (req) => {
 
     console.log('💬 Nova conversa - Mensagem:', message);
 
-    // Dados do imóvel (em produção viria do banco de dados)
-    const property = {
-      id: propertyId,
-      title: "Kitnet Studio Centro",
-      address: "Rua Augusta, 123 - Centro, São Paulo - SP",
-      rent: 1200,
-      property_type: "Kitnet",
-      bedrooms: 1,
-      bathrooms: 1,
-      area_sqm: 35,
-      description: "Linda kitnet mobiliada no centro de São Paulo. Perfeita para estudantes e profissionais. Próxima ao metrô e universidades.",
-      amenities: ["Ar condicionado", "Internet Wi-Fi", "Mobiliado", "Portaria 24h", "Próximo ao metrô", "Geladeira", "Microondas"],
-      neighborhood: "Centro",
-      nearby: ["Metrô República (5min)", "Universidade Anhembi (10min)", "Shopping Light (8min)", "Mercados e farmácias"],
-      rules: ["Não fumantes", "Sem animais", "Comprovação de renda 3x o valor"],
-      contact_preference: "WhatsApp"
-    };
+    // Conectar ao Supabase
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Buscar dados reais do imóvel no banco de dados
+    const { data: property, error: propertyError } = await supabase
+      .from('properties')
+      .select('*')
+      .eq('id', propertyId)
+      .eq('is_active', true)
+      .single();
+
+    if (propertyError || !property) {
+      console.error('❌ Erro buscando imóvel:', propertyError);
+      throw new Error('Imóvel não encontrado ou inativo');
+    }
+
+    console.log('🏠 Imóvel encontrado:', property.title);
 
     // Agente IA especializado em aluguel de kitnets
     const systemPrompt = `
@@ -266,7 +269,22 @@ Seja sempre natural, consultiva e focada em qualificar adequadamente cada intere
     if (leadMatch) {
       leadQualified = true;
       console.log('🎯 Lead qualificado pela Sofia!');
-      // Aqui poderia salvar no banco de dados quando as tabelas estiverem criadas
+      
+      // Salvar conversa qualificada no banco
+      const { error: saveError } = await supabase
+        .from('chatbot_conversations')
+        .insert({
+          property_id: propertyId,
+          visitor_info: leadMatch[1] ? { raw_data: leadMatch[1] } : null,
+          conversation_history: [...conversationHistory, { role: 'user', content: message }, { role: 'assistant', content: cleanResponse }],
+          lead_qualified: true
+        });
+      
+      if (saveError) {
+        console.error('❌ Erro salvando conversa:', saveError);
+      } else {
+        console.log('✅ Conversa salva com sucesso!');
+      }
     }
 
     // Limpar marcadores da resposta

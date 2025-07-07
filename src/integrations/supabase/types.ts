@@ -14,7 +14,110 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      chatbot_conversations: {
+        Row: {
+          conversation_history: Json[] | null
+          created_at: string
+          id: string
+          lead_qualified: boolean | null
+          property_id: string
+          updated_at: string
+          visitor_info: Json | null
+        }
+        Insert: {
+          conversation_history?: Json[] | null
+          created_at?: string
+          id?: string
+          lead_qualified?: boolean | null
+          property_id: string
+          updated_at?: string
+          visitor_info?: Json | null
+        }
+        Update: {
+          conversation_history?: Json[] | null
+          created_at?: string
+          id?: string
+          lead_qualified?: boolean | null
+          property_id?: string
+          updated_at?: string
+          visitor_info?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chatbot_conversations_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      properties: {
+        Row: {
+          address: string
+          amenities: string[] | null
+          area_sqm: number | null
+          bathrooms: number | null
+          bedrooms: number | null
+          contact_preference: string | null
+          created_at: string
+          description: string | null
+          id: string
+          images: string[] | null
+          is_active: boolean | null
+          nearby: string[] | null
+          neighborhood: string | null
+          property_type: string
+          rent: number
+          rules: string[] | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          amenities?: string[] | null
+          area_sqm?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          contact_preference?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          is_active?: boolean | null
+          nearby?: string[] | null
+          neighborhood?: string | null
+          property_type?: string
+          rent: number
+          rules?: string[] | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          amenities?: string[] | null
+          area_sqm?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          contact_preference?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          is_active?: boolean | null
+          nearby?: string[] | null
+          neighborhood?: string | null
+          property_type?: string
+          rent?: number
+          rules?: string[] | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
