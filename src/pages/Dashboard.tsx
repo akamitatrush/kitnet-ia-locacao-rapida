@@ -8,17 +8,19 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Home, Users, TrendingUp, MessageCircle, Clock, DollarSign, 
   Eye, Share2, Settings, Plus, Star, MapPin, Calendar, Phone,
-  Copy, ExternalLink, CheckCircle, AlertCircle, UserCheck, Filter
+  Copy, ExternalLink, CheckCircle, AlertCircle, UserCheck, Filter, BarChart3
 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { useDashboardMetrics } from "@/hooks/useDashboardMetrics";
 import { usePropertyAnalytics } from "@/hooks/usePropertyAnalytics";
 import { useRecentLeads } from "@/hooks/useRecentLeads";
+import { PropertyFlow } from "@/components/PropertyFlow";
 
 const Dashboard = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
   const [dateFilter, setDateFilter] = useState("all");
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
 
   // Real data from Supabase
   const metrics = useDashboardMetrics(dateFilter);
@@ -77,6 +79,33 @@ const Dashboard = () => {
       default: return UserCheck;
     }
   };
+
+  // Show PropertyFlow if a property is selected
+  if (selectedPropertyId) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+        <div className="bg-white/80 backdrop-blur-md border-b border-white/20 shadow-sm">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center space-x-3">
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-2 rounded-xl">
+                <Home className="w-6 h-6" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
+                <p className="text-gray-600">Fluxo detalhado do imóvel</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="container mx-auto px-4 py-8">
+          <PropertyFlow 
+            propertyId={selectedPropertyId} 
+            onBack={() => setSelectedPropertyId(null)} 
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
@@ -391,16 +420,24 @@ const Dashboard = () => {
                         </div>
                       </div>
 
-                      <div className="flex space-x-2">
+                      <div className="flex space-x-2 mb-3">
+                        <Button 
+                          className="flex-1" 
+                          variant="outline"
+                          onClick={() => setSelectedPropertyId(property.id)}
+                        >
+                          <BarChart3 className="w-4 h-4 mr-2" />
+                          Ver Fluxo
+                        </Button>
                         <Button className="flex-1" variant="outline">
                           <Settings className="w-4 h-4 mr-2" />
                           Editar
                         </Button>
-                        <Button className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white">
-                          <Share2 className="w-4 h-4 mr-2" />
-                          Divulgar
-                        </Button>
                       </div>
+                      <Button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white">
+                        <Share2 className="w-4 h-4 mr-2" />
+                        Divulgar
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
