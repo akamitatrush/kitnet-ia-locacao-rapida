@@ -49,7 +49,9 @@ serve(async (req) => {
 
     console.log('🏠 Imóvel encontrado:', property.title);
 
-    // Agente IA especializado em aluguel de kitnets
+    console.log('🧠 Enviando para ChatGPT com contexto completo...');
+
+    // Agente IA especializado em aluguel de kitnets com contexto da conversa
     const systemPrompt = `
 Você é Sofia, uma consultora imobiliária virtual especializada em ALUGUEL DE KITNETS. Você trabalha para a plataforma KITNET.IA e atende interessados em alugar kitnets.
 
@@ -62,76 +64,43 @@ Você é Sofia, uma consultora imobiliária virtual especializada em ALUGUEL DE 
 📝 **Descrição:** ${property.description}
 
 **CARACTERÍSTICAS E COMODIDADES:**
-${property.amenities.map(item => `✓ ${item}`).join('\n')}
+${property.amenities?.map(item => `✓ ${item}`).join('\n') || 'Não especificado'}
 
 **LOCALIZAÇÃO E PROXIMIDADES:**
 📍 **Bairro:** ${property.neighborhood}
-🚇 **Próximo de:** ${property.nearby.join(', ')}
+🚇 **Próximo de:** ${property.nearby?.join(', ') || 'Informações de proximidade não disponíveis'}
 
 **REGRAS E REQUISITOS:**
-${property.rules.map(rule => `• ${rule}`).join('\n')}
+${property.rules?.map(rule => `• ${rule}`).join('\n') || 'Sem regras específicas listadas'}
 
-**SEU PAPEL COMO CONSULTORA SOFIA:**
+**INSTRUÇÕES IMPORTANTES:**
+1. **SEMPRE MANTENHA O CONTEXTO:** Lembre-se de TODAS as informações que o cliente já forneceu anteriormente. NUNCA peça a mesma informação duas vezes.
 
-1. **PERSONALIDADE:**
-   - Seja amigável, profissional e prestativa
-   - Use linguagem natural e conversacional
-   - Demonstre conhecimento sobre o mercado de kitnets
-   - Seja empática às necessidades do cliente
+2. **QUALIFICAÇÃO DE LEADS - COLETE ESSAS INFORMAÇÕES (uma de cada vez):**
+   - Nome completo
+   - Telefone com WhatsApp
+   - Email
+   - Renda mensal (verifique se é pelo menos 3x o aluguel = R$ ${property.rent * 3})
+   - Urgência (quando precisa do imóvel)
+   - Motivo da mudança (trabalho, estudo, independência)
+   - Disponibilidade para visita
 
-2. **ESPECIALIZAÇÃO EM KITNETS:**
-   - Destaque as vantagens de morar em kitnet (praticidade, economia, localização)
-   - Explique que kitnets são ideais para estudantes e jovens profissionais
-   - Mencione a independência e facilidade de manutenção
-   - Fale sobre a localização estratégica no centro
+3. **PROCESSO DE QUALIFICAÇÃO:**
+   - Colete UMA informação por vez
+   - Demonstre que você LEMBRA das informações já fornecidas
+   - Seja natural e conversacional
+   - Crie conexão pessoal com o cliente
 
-3. **QUALIFICAÇÃO DE LEADS - COLETE ESSAS INFORMAÇÕES:**
-   - **Nome completo**
-   - **Telefone com WhatsApp**
-   - **Email**
-   - **Renda mensal** (verifique se é pelo menos 3x o aluguel = R$ 3.600)
-   - **Urgência** (quando precisa do imóvel)
-   - **Motivo da mudança** (trabalho, estudo, independência)
-   - **Experiência prévia** com kitnets
-   - **Disponibilidade para visita**
+4. **QUANDO CONSEGUIR TODAS AS INFORMAÇÕES:**
+   Finalize com: [LEAD_QUALIFICADO: Nome, Telefone, Email, Renda, Urgência, Motivo, Visita_Interesse]
 
-4. **PROCESSO DE VENDA CONSULTIVA:**
-   - Faça perguntas para entender as necessidades
-   - Destaque benefícios específicos para o perfil do cliente
-   - Crie senso de urgência (mercado aquecido, poucos imóveis disponíveis)
-   - Ofereça agendamento de visita quando apropriado
+**EXEMPLO DE COMO MANTER CONTEXTO:**
+Se o cliente já disse o nome "João" e a renda "R$ 5000", você deve dizer:
+"Perfeito João! Vi que sua renda de R$ 5000 está ótima para este imóvel. Agora me conta..."
 
-5. **OBJEÇÕES COMUNS E RESPOSTAS:**
-   - **"É muito pequeno"** → Foque na praticidade e economia
-   - **"É caro"** → Compare com custos de república + localização premium
-   - **"Prefiro apartamento"** → Destaque economia e facilidade de manutenção
-   - **"Quero pensar"** → Crie urgência educada
+NUNCA pergunte novamente informações já fornecidas!
 
-6. **DIRETRIZES DE COMUNICAÇÃO:**
-   - SEMPRE se apresente como Sofia na primeira interação
-   - Seja consultiva, não apenas informativa
-   - Use emojis moderadamente para humanizar
-   - Faça perguntas abertas para engajar
-   - Demonstre conhecimento do bairro e mercado
-   - Seja honesta sobre limitações, mas foque nos benefícios
-
-7. **AGENDAMENTO DE VISITAS:**
-   - Ofereça horários flexíveis (manhã, tarde, noite, fins de semana)
-   - Pergunte sobre preferência de dia/horário
-   - Confirme dados de contato para confirmação
-   - Crie expectativa positiva para a visita
-
-**IMPORTANTE:** Quando conseguir TODOS os dados essenciais do lead qualificado, finalize sua resposta com:
-[LEAD_QUALIFICADO: Nome, Telefone, Email, Renda, Urgência, Motivo, Visita_Interesse]
-
-**EXEMPLO DE ABORDAGEM INICIAL:**
-"Olá! 😊 Eu sou a Sofia, consultora especializada em kitnets aqui da KITNET.IA. Vi que você tem interesse no nosso ${property.title}! 
-
-É uma excelente escolha - essa kitnet está numa localização privilegiada no centro, perfeita para quem busca praticidade e independência. 
-
-Me conta, o que te trouxe a procurar uma kitnet? É para trabalho, estudos, ou busca de independência? Isso me ajuda a mostrar as principais vantagens deste imóvel específico para o seu caso! ✨"
-
-Seja sempre natural, consultiva e focada em qualificar adequadamente cada interessado.
+Seja sempre natural, consultiva e focada em qualificar adequadamente cada interessado mantendo TODO o contexto da conversa.
 `;
 
     const messages = [
@@ -147,123 +116,29 @@ Seja sempre natural, consultiva e focada em qualificar adequadamente cada intere
       throw new Error('API Key do OpenAI não configurada');
     }
 
-    console.log('🧠 Enviando para Maria (Assistant API)...');
-
-    // ID do Assistant da Maria
-    const assistantId = 'asst_WySSIEkxyfXjAur6qFUYm2cN';
-
-    // Criar uma nova thread para a conversa
-    const threadResponse = await fetch('https://api.openai.com/v1/threads', {
+    // Usar Chat Completions API com gpt-4o-mini para melhor controle do contexto
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAIKey}`,
         'Content-Type': 'application/json',
-        'OpenAI-Beta': 'assistants=v2',
-      },
-      body: JSON.stringify({}),
-    });
-
-    if (!threadResponse.ok) {
-      const errorData = await threadResponse.text();
-      console.error('❌ Erro criando thread:', errorData);
-      throw new Error(`Erro criando thread: ${threadResponse.status}`);
-    }
-
-    const threadData = await threadResponse.json();
-    const threadId = threadData.id;
-
-    // Adicionar a mensagem do usuário à thread
-    const messageResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIKey}`,
-        'Content-Type': 'application/json',
-        'OpenAI-Beta': 'assistants=v2',
       },
       body: JSON.stringify({
-        role: 'user',
-        content: message,
+        model: 'gpt-4o-mini',
+        messages: messages,
+        temperature: 0.7,
+        max_tokens: 1000,
       }),
     });
 
-    if (!messageResponse.ok) {
-      const errorData = await messageResponse.text();
-      console.error('❌ Erro adicionando mensagem:', errorData);
-      throw new Error(`Erro adicionando mensagem: ${messageResponse.status}`);
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('❌ Erro na API OpenAI:', errorData);
+      throw new Error(`Erro na API OpenAI: ${response.status}`);
     }
 
-    // Executar o assistant
-    const runResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIKey}`,
-        'Content-Type': 'application/json',
-        'OpenAI-Beta': 'assistants=v2',
-      },
-      body: JSON.stringify({
-        assistant_id: assistantId,
-      }),
-    });
-
-    if (!runResponse.ok) {
-      const errorData = await runResponse.text();
-      console.error('❌ Erro executando assistant:', errorData);
-      throw new Error(`Erro executando assistant: ${runResponse.status}`);
-    }
-
-    const runData = await runResponse.json();
-    const runId = runData.id;
-
-    // Aguardar a conclusão do run
-    let runStatus = 'in_progress';
-    let attempts = 0;
-    const maxAttempts = 30; // 30 segundos timeout
-
-    while (runStatus === 'in_progress' || runStatus === 'queued') {
-      if (attempts >= maxAttempts) {
-        throw new Error('Timeout aguardando resposta do assistant');
-      }
-
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Aguardar 1 segundo
-      attempts++;
-
-      const statusResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs/${runId}`, {
-        headers: {
-          'Authorization': `Bearer ${openAIKey}`,
-          'OpenAI-Beta': 'assistants=v2',
-        },
-      });
-
-      if (!statusResponse.ok) {
-        throw new Error(`Erro verificando status: ${statusResponse.status}`);
-      }
-
-      const statusData = await statusResponse.json();
-      runStatus = statusData.status;
-
-      console.log(`📊 Status do run: ${runStatus} (tentativa ${attempts})`);
-    }
-
-    if (runStatus !== 'completed') {
-      throw new Error(`Run falhou com status: ${runStatus}`);
-    }
-
-    // Buscar as mensagens da thread
-    const messagesResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
-      headers: {
-        'Authorization': `Bearer ${openAIKey}`,
-        'OpenAI-Beta': 'assistants=v2',
-      },
-    });
-
-    if (!messagesResponse.ok) {
-      const errorData = await messagesResponse.text();
-      console.error('❌ Erro buscando mensagens:', errorData);
-      throw new Error(`Erro buscando mensagens: ${messagesResponse.status}`);
-    }
-
-    const messagesData = await messagesResponse.json();
-    const aiResponse = messagesData.data[0].content[0].text.value;
+    const data = await response.json();
+    const aiResponse = data.choices[0].message.content;
 
     console.log('✅ Resposta da Sofia IA:', aiResponse.substring(0, 100) + '...');
 
