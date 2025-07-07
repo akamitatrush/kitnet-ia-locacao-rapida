@@ -3,92 +3,27 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Home, Users, TrendingUp, MessageCircle, Clock, DollarSign, 
   Eye, Share2, Settings, Plus, Star, MapPin, Calendar, Phone,
-  Copy, ExternalLink, CheckCircle, AlertCircle, UserCheck
+  Copy, ExternalLink, CheckCircle, AlertCircle, UserCheck, Filter
 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { useDashboardMetrics } from "@/hooks/useDashboardMetrics";
+import { usePropertyAnalytics } from "@/hooks/usePropertyAnalytics";
+import { useRecentLeads } from "@/hooks/useRecentLeads";
 
 const Dashboard = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
+  const [dateFilter, setDateFilter] = useState("all");
 
-  // Mock data - em produção viria da API
-  const [properties] = useState([
-    {
-      id: 1,
-      title: "Kitnet Centro - Rua Augusta",
-      address: "Rua Augusta, 123 - Centro, São Paulo",
-      rent: 1200,
-      status: "available",
-      leads: 8,
-      views: 45,
-      photos: 6,
-      link: "https://kitnet.ia/p/augusta-123",
-      createdAt: "2024-01-15"
-    },
-    {
-      id: 2,
-      title: "Studio Vila Madalena",
-      address: "Rua Harmonia, 456 - Vila Madalena, São Paulo",
-      rent: 1800,
-      status: "rented",
-      leads: 12,
-      views: 78,
-      photos: 8,
-      link: "https://kitnet.ia/p/harmonia-456",
-      createdAt: "2024-01-10"
-    }
-  ]);
-
-  const [leads] = useState([
-    {
-      id: 1,
-      name: "Maria Silva",
-      phone: "(11) 99999-1234",
-      income: 3500,
-      urgency: "urgente",
-      score: "A",
-      property: "Kitnet Centro - Rua Augusta",
-      status: "qualified",
-      lastContact: "2024-01-20 14:30",
-      conversation: "Interessada, tem renda compatível, precisa para março."
-    },
-    {
-      id: 2,
-      name: "João Santos",
-      phone: "(11) 99999-5678",
-      income: 2800,
-      urgency: "30 dias",
-      score: "B",
-      property: "Studio Vila Madalena",
-      status: "pending",
-      lastContact: "2024-01-20 10:15",
-      conversation: "Renda ok, quer agendar visita no final de semana."
-    },
-    {
-      id: 3,
-      name: "Ana Costa",
-      phone: "(11) 99999-9999",
-      income: 1500,
-      urgency: "não urgente",
-      score: "C",
-      property: "Kitnet Centro - Rua Augusta",
-      status: "rejected",
-      lastContact: "2024-01-19 16:45",
-      conversation: "Renda insuficiente para o imóvel desejado."
-    }
-  ]);
-
-  const [metrics] = useState({
-    totalProperties: 2,
-    totalLeads: 20,
-    qualifiedLeads: 8,
-    conversionRate: 40,
-    averageTime: 7,
-    monthlyRevenue: 3000
-  });
+  // Real data from Supabase
+  const metrics = useDashboardMetrics(dateFilter);
+  const { properties, loading: propertiesLoading } = usePropertyAnalytics();
+  const { leads, loading: leadsLoading } = useRecentLeads();
 
   const copyLink = (link: string) => {
     navigator.clipboard.writeText(link);
@@ -167,6 +102,28 @@ const Dashboard = () => {
       </div>
 
       <div className="container mx-auto px-4 py-8">
+        {/* Filters */}
+        <div className="mb-8">
+          <Card className="bg-white/60 backdrop-blur-sm border-white/40 shadow-lg">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-4">
+                <Filter className="w-5 h-5 text-gray-600" />
+                <span className="text-sm font-medium text-gray-700">Filtros:</span>
+                <Select value={dateFilter} onValueChange={setDateFilter}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Selecione o período" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os períodos</SelectItem>
+                    <SelectItem value="7days">Últimos 7 dias</SelectItem>
+                    <SelectItem value="30days">Últimos 30 dias</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Metrics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-8">
           <Card className="bg-white/60 backdrop-blur-sm border-white/40 shadow-lg">
@@ -174,7 +131,11 @@ const Dashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Imóveis</p>
-                  <p className="text-2xl font-bold text-blue-600">{metrics.totalProperties}</p>
+                  {metrics.loading ? (
+                    <Skeleton className="h-8 w-16 mt-1" />
+                  ) : (
+                    <p className="text-2xl font-bold text-blue-600">{metrics.totalProperties}</p>
+                  )}
                 </div>
                 <Home className="w-8 h-8 text-blue-600" />
               </div>
@@ -186,7 +147,11 @@ const Dashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Total Leads</p>
-                  <p className="text-2xl font-bold text-indigo-600">{metrics.totalLeads}</p>
+                  {metrics.loading ? (
+                    <Skeleton className="h-8 w-16 mt-1" />
+                  ) : (
+                    <p className="text-2xl font-bold text-indigo-600">{metrics.totalLeads}</p>
+                  )}
                 </div>
                 <Users className="w-8 h-8 text-indigo-600" />
               </div>
@@ -198,7 +163,11 @@ const Dashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Qualificados</p>
-                  <p className="text-2xl font-bold text-green-600">{metrics.qualifiedLeads}</p>
+                  {metrics.loading ? (
+                    <Skeleton className="h-8 w-16 mt-1" />
+                  ) : (
+                    <p className="text-2xl font-bold text-green-600">{metrics.qualifiedLeads}</p>
+                  )}
                 </div>
                 <UserCheck className="w-8 h-8 text-green-600" />
               </div>
@@ -210,7 +179,11 @@ const Dashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Conversão</p>
-                  <p className="text-2xl font-bold text-purple-600">{metrics.conversionRate}%</p>
+                  {metrics.loading ? (
+                    <Skeleton className="h-8 w-16 mt-1" />
+                  ) : (
+                    <p className="text-2xl font-bold text-purple-600">{metrics.conversionRate}%</p>
+                  )}
                 </div>
                 <TrendingUp className="w-8 h-8 text-purple-600" />
               </div>
@@ -222,7 +195,11 @@ const Dashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Tempo Médio</p>
-                  <p className="text-2xl font-bold text-orange-600">{metrics.averageTime}d</p>
+                  {metrics.loading ? (
+                    <Skeleton className="h-8 w-16 mt-1" />
+                  ) : (
+                    <p className="text-2xl font-bold text-orange-600">{metrics.averageTime}d</p>
+                  )}
                 </div>
                 <Clock className="w-8 h-8 text-orange-600" />
               </div>
@@ -234,7 +211,11 @@ const Dashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Receita</p>
-                  <p className="text-2xl font-bold text-green-600">R${metrics.monthlyRevenue}</p>
+                  {metrics.loading ? (
+                    <Skeleton className="h-8 w-16 mt-1" />
+                  ) : (
+                    <p className="text-2xl font-bold text-green-600">R$ {metrics.monthlyRevenue.toLocaleString()}</p>
+                  )}
                 </div>
                 <DollarSign className="w-8 h-8 text-green-600" />
               </div>
@@ -333,8 +314,23 @@ const Dashboard = () => {
 
           {/* Properties Tab */}
           <TabsContent value="properties" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {properties.map((property) => (
+            {propertiesLoading ? (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {[1, 2].map((i) => (
+                  <Card key={i} className="bg-white/60 backdrop-blur-sm border-white/40 shadow-lg">
+                    <CardHeader>
+                      <Skeleton className="h-6 w-3/4" />
+                      <Skeleton className="h-4 w-1/2" />
+                    </CardHeader>
+                    <CardContent>
+                      <Skeleton className="h-32 w-full" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {properties.map((property) => (
                 <Card key={property.id} className="bg-white/60 backdrop-blur-sm border-white/40 shadow-lg hover:shadow-xl transition-all duration-300">
                   <CardHeader>
                     <div className="flex justify-between items-start">
@@ -357,7 +353,7 @@ const Dashboard = () => {
                         <span className="text-sm text-gray-600">/mês</span>
                       </div>
                       
-                      <div className="grid grid-cols-3 gap-4">
+                        <div className="grid grid-cols-4 gap-4">
                         <div className="text-center">
                           <p className="text-lg font-bold text-blue-600">{property.views}</p>
                           <p className="text-xs text-gray-600">Views</p>
@@ -369,6 +365,10 @@ const Dashboard = () => {
                         <div className="text-center">
                           <p className="text-lg font-bold text-purple-600">{property.photos}</p>
                           <p className="text-xs text-gray-600">Fotos</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-lg font-bold text-green-600">{property.conversionRate}%</p>
+                          <p className="text-xs text-gray-600">Conversão</p>
                         </div>
                       </div>
 
@@ -404,14 +404,34 @@ const Dashboard = () => {
                     </div>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           {/* Leads Tab */}
           <TabsContent value="leads" className="space-y-6">
-            <div className="space-y-4">
-              {leads.map((lead) => {
+            {leadsLoading ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <Card key={i} className="bg-white/60 backdrop-blur-sm border-white/40 shadow-lg">
+                    <CardContent className="p-6">
+                      <Skeleton className="h-32 w-full" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : leads.length === 0 ? (
+              <Card className="bg-white/60 backdrop-blur-sm border-white/40 shadow-lg">
+                <CardContent className="p-8 text-center">
+                  <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-600 mb-2">Nenhum lead qualificado ainda</h3>
+                  <p className="text-gray-500">Seus leads qualificados aparecerão aqui conforme a Sofia IA conversar com interessados.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {leads.map((lead) => {
                 const StatusIcon = getLeadStatusIcon(lead.status);
                 return (
                   <Card key={lead.id} className="bg-white/60 backdrop-blur-sm border-white/40 shadow-lg">
@@ -477,8 +497,9 @@ const Dashboard = () => {
                     </CardContent>
                   </Card>
                 );
-              })}
-            </div>
+                })}
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
