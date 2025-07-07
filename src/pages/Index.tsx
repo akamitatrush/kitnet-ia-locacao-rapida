@@ -352,7 +352,10 @@ const Index = () => {
           
           <form className="space-y-4" onSubmit={(e) => {
             e.preventDefault();
-            alert('Cadastro realizado! Acesse o chatbot na tela principal.');
+            alert('Cadastro realizado! Acesse o dashboard para ver suas métricas.');
+            setTimeout(() => {
+              window.location.href = '/dashboard';
+            }, 1000);
             closeLeadModal();
           }}>
             <div>

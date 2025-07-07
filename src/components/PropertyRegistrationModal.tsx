@@ -82,12 +82,12 @@ const PropertyRegistrationModal = ({ isOpen, onClose }: PropertyRegistrationModa
     // Simulate API call
     toast({
       title: "Sucesso! 🎉",
-      description: "Seu imóvel foi cadastrado. O chatbot já está ativo!",
+      description: "Seu imóvel foi cadastrado. Redirecionando para o dashboard...",
     });
     
     console.log('Toast enviado');
     
-    // Reset form and close
+    // Reset form and redirect to dashboard
     setFormData({
       ownerName: '', ownerEmail: '', ownerPhone: '',
       address: '', neighborhood: '', city: '',
@@ -97,6 +97,11 @@ const PropertyRegistrationModal = ({ isOpen, onClose }: PropertyRegistrationModa
     });
     setCurrentStep(1);
     onClose();
+    
+    // Redirect to dashboard after a short delay
+    setTimeout(() => {
+      window.location.href = '/dashboard';
+    }, 1500);
   };
 
   const isStepComplete = () => {
