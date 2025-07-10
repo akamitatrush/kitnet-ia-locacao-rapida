@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { Upload, X, Check } from 'lucide-react';
+import { Progress } from "@/components/ui/progress";
+import { Upload, X, Check, AlertCircle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +22,8 @@ const PropertyRegistrationModal = ({ isOpen, onClose }: PropertyRegistrationModa
   const { user, profile } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
   const [formData, setFormData] = useState({
     // Property info
     address: '',
@@ -56,9 +59,50 @@ const PropertyRegistrationModal = ({ isOpen, onClose }: PropertyRegistrationModa
     }));
   };
 
+  // Validações de arquivo
+  const validateFile = (file: File): string | null => {
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    
+    if (file.size > maxSize) {
+      return `${file.name}: Arquivo muito grande (máximo 5MB)`;
+    }
+    
+    if (!allowedTypes.includes(file.type)) {
+      return `${file.name}: Formato não suportado (apenas JPG, PNG, WEBP)`;
+    }
+    
+    return null;
+  };
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    setFormData(prev => ({ ...prev, photos: [...prev.photos, ...files] }));
+    const errors: string[] = [];
+    const validFiles: File[] = [];
+
+    files.forEach(file => {
+      const error = validateFile(file);
+      if (error) {
+        errors.push(error);
+      } else {
+        validFiles.push(file);
+      }
+    });
+
+    if (errors.length > 0) {
+      toast({
+        title: "Erro nos arquivos",
+        description: errors.join('\n'),
+        variant: "destructive",
+      });
+    }
+
+    if (validFiles.length > 0) {
+      setFormData(prev => ({ ...prev, photos: [...prev.photos, ...validFiles] }));
+    }
+
+    // Reset input
+    e.target.value = '';
   };
 
   const removePhoto = (index: number) => {
@@ -87,8 +131,65 @@ const PropertyRegistrationModal = ({ isOpen, onClose }: PropertyRegistrationModa
     }
 
     setIsSubmitting(true);
+    setIsUploading(true);
+    setUploadProgress(0);
 
     try {
+      let imageUrls: string[] = [];
+
+      // Upload das imagens se houver
+      if (formData.photos.length > 0) {
+        toast({
+          title: "Fazendo upload das imagens...",
+          description: "Por favor, aguarde enquanto as imagens são enviadas.",
+        });
+
+        const totalFiles = formData.photos.length;
+        
+        for (let i = 0; i < formData.photos.length; i++) {
+          const file = formData.photos[i];
+          const fileName = `${Date.now()}_${i}_${file.name}`;
+          const filePath = `${user.id}/${fileName}`;
+
+          try {
+            const { data: uploadData, error: uploadError } = await supabase.storage
+              .from('property-images')
+              .upload(filePath, file, {
+                cacheControl: '3600',
+                upsert: false
+              });
+
+            if (uploadError) {
+              console.error('Erro no upload:', uploadError);
+              throw new Error(`Erro ao fazer upload de ${file.name}: ${uploadError.message}`);
+            }
+
+            if (uploadData) {
+              const { data: { publicUrl } } = supabase.storage
+                .from('property-images')
+                .getPublicUrl(uploadData.path);
+              
+              imageUrls.push(publicUrl);
+            }
+
+            // Atualizar progress
+            const progress = Math.round(((i + 1) / totalFiles) * 100);
+            setUploadProgress(progress);
+
+          } catch (fileError) {
+            console.error(`Erro no arquivo ${file.name}:`, fileError);
+            toast({
+              title: "Erro no upload",
+              description: `Falha ao enviar ${file.name}. Continuando com outras imagens...`,
+              variant: "destructive",
+            });
+          }
+        }
+      }
+
+      setIsUploading(false);
+
+      // Cadastrar o imóvel com as URLs das imagens
       const { data, error } = await supabase
         .from('properties')
         .insert([
@@ -103,6 +204,7 @@ const PropertyRegistrationModal = ({ isOpen, onClose }: PropertyRegistrationModa
             bathrooms: parseInt(formData.bathrooms),
             area_sqm: formData.area ? parseInt(formData.area) : null,
             amenities: formData.amenities,
+            images: imageUrls.length > 0 ? imageUrls : null,
             property_type: 'Kitnet',
             is_active: true
           }
@@ -111,6 +213,23 @@ const PropertyRegistrationModal = ({ isOpen, onClose }: PropertyRegistrationModa
 
       if (error) {
         console.error('Erro ao cadastrar imóvel:', error);
+        
+        // Se deu erro no cadastro mas já fez upload de imagens, tentar limpar
+        if (imageUrls.length > 0) {
+          try {
+            const filesToDelete = imageUrls.map(url => {
+              const urlParts = url.split('/');
+              return `${user.id}/${urlParts[urlParts.length - 1]}`;
+            });
+            
+            await supabase.storage
+              .from('property-images')
+              .remove(filesToDelete);
+          } catch (cleanupError) {
+            console.error('Erro ao limpar imagens:', cleanupError);
+          }
+        }
+
         toast({
           title: "Erro ao cadastrar imóvel",
           description: error.message,
@@ -121,7 +240,7 @@ const PropertyRegistrationModal = ({ isOpen, onClose }: PropertyRegistrationModa
 
       toast({
         title: "Sucesso! 🎉",
-        description: "Seu imóvel foi cadastrado com sucesso!",
+        description: `Seu imóvel foi cadastrado com sucesso${imageUrls.length > 0 ? ` com ${imageUrls.length} imagem(ns)` : ''}!`,
       });
 
       // Reset form
@@ -132,6 +251,7 @@ const PropertyRegistrationModal = ({ isOpen, onClose }: PropertyRegistrationModa
         amenities: [], photos: []
       });
       setCurrentStep(1);
+      setUploadProgress(0);
       onClose();
       
       // Refresh the page to show the new property
@@ -141,11 +261,13 @@ const PropertyRegistrationModal = ({ isOpen, onClose }: PropertyRegistrationModa
       console.error('Erro inesperado:', error);
       toast({
         title: "Erro inesperado",
-        description: "Tente novamente em alguns momentos.",
+        description: error.message || "Tente novamente em alguns momentos.",
         variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
+      setIsUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -348,16 +470,19 @@ const PropertyRegistrationModal = ({ isOpen, onClose }: PropertyRegistrationModa
                 <div className="mt-2">
                   <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <Upload className="w-8 h-8 mb-4 text-gray-500" />
-                      <p className="mb-2 text-sm text-gray-500">
-                        <span className="font-semibold">Clique para enviar</span> ou arraste as fotos
-                      </p>
+                       <Upload className="w-8 h-8 mb-4 text-gray-500" />
+                       <p className="mb-2 text-sm text-gray-500">
+                         <span className="font-semibold">Clique para enviar</span> ou arraste as fotos
+                       </p>
+                       <p className="text-xs text-gray-400">
+                         JPG, PNG, WEBP • Máx 5MB por arquivo
+                       </p>
                     </div>
                     <input
                       type="file"
                       className="hidden"
                       multiple
-                      accept="image/*"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
                       onChange={handleFileUpload}
                     />
                   </label>
@@ -385,6 +510,20 @@ const PropertyRegistrationModal = ({ isOpen, onClose }: PropertyRegistrationModa
                     ))}
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Upload Progress */}
+          {isUploading && (
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <Upload className="w-4 h-4 text-blue-600 animate-pulse" />
+                <span className="text-sm text-gray-600">Fazendo upload das imagens...</span>
+              </div>
+              <Progress value={uploadProgress} className="w-full" />
+              <div className="text-xs text-gray-500 text-center">
+                {uploadProgress}% concluído
               </div>
             </div>
           )}
