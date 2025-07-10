@@ -10,6 +10,7 @@ import Verify from "./pages/Verify";
 import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
 import Configuracoes from "./pages/Configuracoes";
+import Favoritos from "./pages/Favoritos";
 import PropertyPublic from "./pages/PropertyPublic";
 import NotFound from "./pages/NotFound";
 
@@ -29,6 +30,7 @@ const App = () => (
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/configuracoes" element={<Configuracoes />} />
+          <Route path="/favoritos" element={<Favoritos />} />
           <Route path="/imovel/:propertyId" element={<PropertyPublic />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
