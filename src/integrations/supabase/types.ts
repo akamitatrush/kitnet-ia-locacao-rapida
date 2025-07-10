@@ -52,6 +52,41 @@ export type Database = {
           },
         ]
       }
+      conversations: {
+        Row: {
+          created_at: string
+          id: string
+          owner_id: string
+          property_id: string
+          updated_at: string
+          visitor_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          owner_id: string
+          property_id: string
+          updated_at?: string
+          visitor_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          owner_id?: string
+          property_id?: string
+          updated_at?: string
+          visitor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       favorites: {
         Row: {
           created_at: string
@@ -77,6 +112,41 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          read_at: string | null
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
             referencedColumns: ["id"]
           },
         ]
@@ -179,6 +249,198 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      property_comparisons: {
+        Row: {
+          created_at: string
+          id: string
+          property_ids: string[]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          property_ids: string[]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          property_ids?: string[]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      property_views: {
+        Row: {
+          id: string
+          ip_address: unknown | null
+          property_id: string
+          referrer: string | null
+          user_agent: string | null
+          viewed_at: string
+          visitor_id: string | null
+        }
+        Insert: {
+          id?: string
+          ip_address?: unknown | null
+          property_id: string
+          referrer?: string | null
+          user_agent?: string | null
+          viewed_at?: string
+          visitor_id?: string | null
+        }
+        Update: {
+          id?: string
+          ip_address?: unknown | null
+          property_id?: string
+          referrer?: string | null
+          user_agent?: string | null
+          viewed_at?: string
+          visitor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_views_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          is_verified: boolean | null
+          property_id: string
+          rating: number
+          reviewer_id: string
+          stay_duration: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          is_verified?: boolean | null
+          property_id: string
+          rating: number
+          reviewer_id: string
+          stay_duration?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          is_verified?: boolean | null
+          property_id?: string
+          rating?: number
+          reviewer_id?: string
+          stay_duration?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_preferences: {
+        Row: {
+          created_at: string
+          email_notifications: boolean | null
+          id: string
+          language: string | null
+          notifications_enabled: boolean | null
+          push_notifications: boolean | null
+          theme: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_notifications?: boolean | null
+          id?: string
+          language?: string | null
+          notifications_enabled?: boolean | null
+          push_notifications?: boolean | null
+          theme?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_notifications?: boolean | null
+          id?: string
+          language?: string | null
+          notifications_enabled?: boolean | null
+          push_notifications?: boolean | null
+          theme?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      visit_requests: {
+        Row: {
+          alternative_date: string | null
+          created_at: string
+          id: string
+          owner_id: string
+          owner_response: string | null
+          preferred_date: string
+          property_id: string
+          status: string
+          updated_at: string
+          visitor_id: string
+          visitor_message: string | null
+        }
+        Insert: {
+          alternative_date?: string | null
+          created_at?: string
+          id?: string
+          owner_id: string
+          owner_response?: string | null
+          preferred_date: string
+          property_id: string
+          status?: string
+          updated_at?: string
+          visitor_id: string
+          visitor_message?: string | null
+        }
+        Update: {
+          alternative_date?: string | null
+          created_at?: string
+          id?: string
+          owner_id?: string
+          owner_response?: string | null
+          preferred_date?: string
+          property_id?: string
+          status?: string
+          updated_at?: string
+          visitor_id?: string
+          visitor_message?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visit_requests_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
