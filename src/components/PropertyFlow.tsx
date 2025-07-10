@@ -164,7 +164,7 @@ export const PropertyFlow = ({ propertyId, onBack }: PropertyFlowProps) => {
   };
 
   const copyLink = () => {
-    const link = `${window.location.origin}/property/${propertyId}`;
+    const link = `${window.location.origin}/imovel/${propertyId}`;
     navigator.clipboard.writeText(link);
     toast({
       title: "Link copiado!",
@@ -285,13 +285,13 @@ export const PropertyFlow = ({ propertyId, onBack }: PropertyFlowProps) => {
             <p className="text-sm text-gray-600 mb-2">Link público do imóvel:</p>
             <div className="flex items-center space-x-2">
               <code className="flex-1 bg-gray-100 px-3 py-2 rounded text-sm text-gray-700 truncate">
-                {`${window.location.origin}/property/${property.id}`}
+                {`${window.location.origin}/imovel/${property.id}`}
               </code>
               <Button size="sm" variant="outline" onClick={copyLink}>
                 <Copy className="w-4 h-4" />
               </Button>
               <Button size="sm" variant="outline" asChild>
-                <a href={`/property/${property.id}`} target="_blank" rel="noopener noreferrer">
+                <a href={`/imovel/${property.id}`} target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="w-4 h-4" />
                 </a>
               </Button>
