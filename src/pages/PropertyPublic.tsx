@@ -3,9 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import AIChatbot from "@/components/AIChatbot";
 import { 
   MapPin, 
@@ -16,17 +18,22 @@ import {
   Home, 
   MessageCircle,
   Phone,
-  AlertCircle
+  AlertCircle,
+  Heart
 } from "lucide-react";
 
 const PropertyPublic = () => {
   const { propertyId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   
   const [property, setProperty] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [favoriteId, setFavoriteId] = useState<string | null>(null);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
 
   // Placeholder images para quando não há imagens
   const placeholderImages = [
@@ -74,7 +81,123 @@ const PropertyPublic = () => {
     };
 
     fetchProperty();
-  }, [propertyId]);
+    if (user && propertyId) {
+      checkIfFavorited();
+    }
+  }, [propertyId, user]);
+
+  // Verificar se o imóvel já está favoritado
+  const checkIfFavorited = async () => {
+    if (!user || !propertyId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('favorites')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('property_id', propertyId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = not found
+        console.error('Erro ao verificar favorito:', error);
+        return;
+      }
+
+      if (data) {
+        setIsFavorited(true);
+        setFavoriteId(data.id);
+      } else {
+        setIsFavorited(false);
+        setFavoriteId(null);
+      }
+    } catch (error) {
+      console.error('Erro inesperado ao verificar favorito:', error);
+    }
+  };
+
+  // Toggle favorito
+  const toggleFavorite = async () => {
+    if (!user) {
+      toast({
+        title: "Faça login",
+        description: "Você precisa estar logado para favoritar imóveis.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!property) return;
+
+    try {
+      setFavoriteLoading(true);
+
+      if (isFavorited && favoriteId) {
+        // Remover dos favoritos
+        const { error } = await supabase
+          .from('favorites')
+          .delete()
+          .eq('id', favoriteId)
+          .eq('user_id', user.id);
+
+        if (error) {
+          console.error('Erro ao remover favorito:', error);
+          toast({
+            title: "Erro",
+            description: "Não foi possível remover dos favoritos.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        setIsFavorited(false);
+        setFavoriteId(null);
+        toast({
+          title: "Removido dos favoritos",
+          description: "Imóvel removido da sua lista de favoritos.",
+        });
+
+      } else {
+        // Adicionar aos favoritos
+        const { data, error } = await supabase
+          .from('favorites')
+          .insert([
+            {
+              user_id: user.id,
+              property_id: propertyId
+            }
+          ])
+          .select('id')
+          .single();
+
+        if (error) {
+          console.error('Erro ao adicionar favorito:', error);
+          toast({
+            title: "Erro",
+            description: "Não foi possível adicionar aos favoritos.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        setIsFavorited(true);
+        setFavoriteId(data.id);
+        toast({
+          title: "Adicionado aos favoritos! ❤️",
+          description: "Imóvel salvo na sua lista de favoritos.",
+        });
+      }
+
+    } catch (error) {
+      console.error('Erro inesperado no favorito:', error);
+      toast({
+        title: "Erro inesperado",
+        description: "Tente novamente em alguns momentos.",
+        variant: "destructive",
+      });
+    } finally {
+      setFavoriteLoading(false);
+    }
+  };
 
   // Função para gerar features baseadas nos dados do imóvel
   const getPropertyFeatures = (property: any) => {
@@ -323,6 +446,34 @@ const PropertyPublic = () => {
                       <MessageCircle className="w-5 h-5 mr-2" />
                       Quero alugar via WhatsApp
                     </Button>
+
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            onClick={toggleFavorite}
+                            disabled={favoriteLoading}
+                            variant={isFavorited ? "default" : "outline"}
+                            className={`w-full h-12 text-base font-medium ${
+                              isFavorited 
+                                ? "bg-red-500 hover:bg-red-600 text-white border-red-500" 
+                                : "text-red-500 border-red-500 hover:bg-red-50"
+                            }`}
+                            size="lg"
+                          >
+                            {favoriteLoading ? (
+                              <div className="w-5 h-5 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <Heart className={`w-5 h-5 mr-2 ${isFavorited ? 'fill-current' : ''}`} />
+                            )}
+                            {isFavorited ? 'Remover dos Favoritos' : 'Adicionar aos Favoritos'}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{isFavorited ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
 
                     <div className="text-center">
                       <div className="text-xs text-muted-foreground">
