@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { 
   Home, 
   Search, 
@@ -11,7 +12,9 @@ import {
   BarChart3,
   Bot,
   Menu,
-  X
+  X,
+  MessageCircle,
+  Calendar
 } from 'lucide-react';
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from 'react';
@@ -32,6 +35,8 @@ export const Layout = ({ children, showSidebar = false }: LayoutProps) => {
     { path: '/favoritos', label: 'Favoritos', icon: Heart, requireAuth: true },
     { path: '/dashboard', label: 'Dashboard', icon: BarChart3, requireAuth: true, ownerOnly: true },
     { path: '/minhas-propriedades', label: 'Meus Imóveis', icon: Settings, requireAuth: true, ownerOnly: true },
+    { path: '/mensagens', label: 'Mensagens', icon: MessageCircle, requireAuth: true },
+    { path: '/visitas', label: 'Visitas', icon: Calendar, requireAuth: true },
     { path: '/configuracoes', label: 'Perfil', icon: User, requireAuth: true },
   ];
 
@@ -44,9 +49,9 @@ export const Layout = ({ children, showSidebar = false }: LayoutProps) => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
       {/* Header */}
-      <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-white/20 shadow-sm">
+      <nav className="fixed top-0 w-full z-50 glass-effect border-b border-border/50 shadow-soft">
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-3">
@@ -60,13 +65,13 @@ export const Layout = ({ children, showSidebar = false }: LayoutProps) => {
                   {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                 </Button>
               )}
-              <Link to="/" className="flex items-center space-x-3">
-                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-2 rounded-xl">
+              <Link to="/" className="flex items-center space-x-3 hover-lift">
+                <div className="bg-gradient-primary text-primary-foreground p-2 rounded-xl shadow-medium">
                   <Bot className="w-6 h-6" />
                 </div>
-                <span className="text-2xl font-bold">
-                  <span className="text-blue-600">KITNET</span>
-                  <span className="text-indigo-500">.IA</span>
+                <span className="text-2xl font-display font-bold">
+                  <span className="gradient-text">KITNET</span>
+                  <span className="text-accent">.IA</span>
                 </span>
               </Link>
             </div>
@@ -79,7 +84,11 @@ export const Layout = ({ children, showSidebar = false }: LayoutProps) => {
                   asChild
                   variant={isActive(item.path) ? "default" : "ghost"}
                   size="sm"
-                  className={isActive(item.path) ? "bg-blue-600 hover:bg-blue-700" : ""}
+                  className={`hover-lift focus-ring transition-all duration-200 ${
+                    isActive(item.path) 
+                      ? "bg-gradient-primary text-primary-foreground shadow-medium" 
+                      : "hover:bg-muted/80"
+                  }`}
                 >
                   <Link to={item.path} className="flex items-center space-x-2">
                     <item.icon className="w-4 h-4" />
@@ -91,6 +100,7 @@ export const Layout = ({ children, showSidebar = false }: LayoutProps) => {
 
             {/* User Menu */}
             <div className="flex items-center space-x-3">
+              <ThemeToggle />
               {user ? (
                 <div className="flex items-center space-x-3">
                   <span className="text-sm text-gray-600 hidden sm:block">
@@ -103,10 +113,10 @@ export const Layout = ({ children, showSidebar = false }: LayoutProps) => {
                 </div>
               ) : (
                 <div className="flex items-center space-x-2">
-                  <Button asChild variant="outline" size="sm">
+                  <Button asChild variant="outline" size="sm" className="hover-lift">
                     <Link to="/signup">Cadastrar</Link>
                   </Button>
-                  <Button asChild size="sm" className="bg-blue-600 hover:bg-blue-700">
+                  <Button asChild size="sm" className="bg-gradient-primary hover:shadow-medium button-glow">
                     <Link to="/login">Entrar</Link>
                   </Button>
                 </div>
@@ -120,7 +130,7 @@ export const Layout = ({ children, showSidebar = false }: LayoutProps) => {
       {showSidebar && sidebarOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
           <div className="fixed inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />
-          <div className="fixed left-0 top-0 h-full w-64 bg-white shadow-lg pt-16">
+          <div className="fixed left-0 top-0 h-full w-64 glass-effect shadow-large pt-16">
             <div className="p-4 space-y-2">
               {filteredItems.map((item) => (
                 <Button
