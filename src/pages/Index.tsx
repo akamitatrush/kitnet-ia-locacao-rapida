@@ -11,6 +11,8 @@ import { Link } from 'react-router-dom';
 import ChatbotDemo from '@/components/ChatbotDemo';
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { Layout } from '@/components/Layout';
+import { SearchFilters, SearchFilters as SearchFiltersType } from '@/components/SearchFilters';
 
 interface Property {
   id: string;
@@ -30,6 +32,15 @@ const Index = () => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [searchFilters, setSearchFilters] = useState<SearchFiltersType>({
+    search: '',
+    propertyType: '',
+    minRent: 0,
+    maxRent: 5000,
+    bedrooms: '',
+    bathrooms: '',
+    neighborhood: '',
+  });
 
   useEffect(() => {
     loadProperties();
@@ -53,11 +64,21 @@ const Index = () => {
     }
   };
 
-  const filteredProperties = properties.filter(property =>
-    property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    property.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    property.neighborhood?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProperties = properties.filter(property => {
+    const matchesSearch = 
+      property.title.toLowerCase().includes(searchFilters.search.toLowerCase()) ||
+      property.address.toLowerCase().includes(searchFilters.search.toLowerCase()) ||
+      property.neighborhood?.toLowerCase().includes(searchFilters.search.toLowerCase());
+    
+    const matchesType = !searchFilters.propertyType || property.property_type === searchFilters.propertyType;
+    const matchesPrice = property.rent >= searchFilters.minRent && property.rent <= searchFilters.maxRent;
+    const matchesBedrooms = !searchFilters.bedrooms || property.bedrooms?.toString() === searchFilters.bedrooms;
+    const matchesBathrooms = !searchFilters.bathrooms || property.bathrooms?.toString() === searchFilters.bathrooms;
+    const matchesNeighborhood = !searchFilters.neighborhood || 
+      property.neighborhood?.toLowerCase().includes(searchFilters.neighborhood.toLowerCase());
+
+    return matchesSearch && matchesType && matchesPrice && matchesBedrooms && matchesBathrooms && matchesNeighborhood;
+  });
   const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
   const [selectedPropertyCount, setSelectedPropertyCount] = useState('');
   const [isVisible, setIsVisible] = useState(false);
@@ -129,57 +150,8 @@ const Index = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-white/20 shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-3">
-              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-2 rounded-xl">
-                <Bot className="w-6 h-6" />
-              </div>
-              <span className="text-2xl font-bold">
-                <span className="text-blue-600">KITNET</span>
-                <span className="text-indigo-500">.IA</span>
-              </span>
-            </div>
-            <div className="flex items-center space-x-4">
-              {user ? (
-                <div className="flex items-center space-x-3">
-                  <span className="text-sm text-gray-600">
-                    Olá, {profile?.full_name || 'Usuário'}
-                  </span>
-                  {profile?.user_type === 'owner' && (
-                    <Button asChild variant="outline" size="sm">
-                      <Link to="/dashboard">Dashboard</Link>
-                    </Button>
-                  )}
-                  <Button variant="outline" size="sm" onClick={signOut}>
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Sair
-                  </Button>
-                </div>
-              ) : (
-                <>
-                  <Button 
-                    asChild
-                    variant="outline"
-                    className="border-blue-600 text-blue-600 hover:bg-blue-50 px-6 py-2 rounded-full transition-all duration-300"
-                  >
-                    <Link to="/signup">Cadastrar Imóvel</Link>
-                  </Button>
-                  <Button 
-                    asChild
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-2 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg"
-                  >
-                    <Link to="/login">Fazer Login</Link>
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
+    <Layout>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
 
       {/* Hero Section */}
       <section className={`pt-32 pb-20 relative overflow-hidden transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
@@ -299,18 +271,9 @@ const Index = () => {
               <p className="text-xl text-gray-600">Encontre sua próxima moradia</p>
             </div>
 
-            {/* Search Bar */}
-            <div className="max-w-md mx-auto mb-12">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <Input
-                  type="text"
-                  placeholder="Buscar por localização..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-3 rounded-full border-2 border-gray-200 focus:border-blue-500"
-                />
-              </div>
+            {/* Search Filters */}
+            <div className="max-w-4xl mx-auto mb-12">
+              <SearchFilters onFiltersChange={setSearchFilters} />
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -564,7 +527,8 @@ const Index = () => {
 
       {/* Chatbot Demo */}
       <ChatbotDemo />
-    </div>
+      </div>
+    </Layout>
   );
 };
 
