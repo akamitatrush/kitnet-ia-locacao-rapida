@@ -43,6 +43,10 @@ export const SearchFilters = ({ onFiltersChange, className }: SearchFiltersProps
 
   const updateFilters = (newFilters: Partial<SearchFilters>) => {
     const updated = { ...filters, ...newFilters };
+    // Convert "all" and "any" back to empty strings for filtering logic
+    if (updated.propertyType === "all") updated.propertyType = "";
+    if (updated.bedrooms === "any") updated.bedrooms = "";
+    if (updated.bathrooms === "any") updated.bathrooms = "";
     setFilters(updated);
     onFiltersChange(updated);
   };
@@ -126,7 +130,7 @@ export const SearchFilters = ({ onFiltersChange, className }: SearchFiltersProps
                     <SelectValue placeholder="Selecione o tipo" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos os tipos</SelectItem>
+                    <SelectItem value="all">Todos os tipos</SelectItem>
                     {propertyTypes.map((type) => (
                       <SelectItem key={type} value={type}>{type}</SelectItem>
                     ))}
@@ -142,7 +146,7 @@ export const SearchFilters = ({ onFiltersChange, className }: SearchFiltersProps
                     <SelectValue placeholder="Qualquer" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Qualquer</SelectItem>
+                    <SelectItem value="any">Qualquer</SelectItem>
                     {bedroomOptions.map((option) => (
                       <SelectItem key={option} value={option}>{option}</SelectItem>
                     ))}
@@ -158,7 +162,7 @@ export const SearchFilters = ({ onFiltersChange, className }: SearchFiltersProps
                     <SelectValue placeholder="Qualquer" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Qualquer</SelectItem>
+                    <SelectItem value="any">Qualquer</SelectItem>
                     {bathroomOptions.map((option) => (
                       <SelectItem key={option} value={option}>{option}</SelectItem>
                     ))}
